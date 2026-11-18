@@ -20,6 +20,13 @@ Write-Host "Copying the Python runtime from $pythonHome ..."
 robocopy $pythonHome (Join-Path $staging 'python') /E /NFL /NDL /NJH /NJS /NP /R:1 /W:1 /XD __pycache__ .pytest_cache .mypy_cache .ruff_cache | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
 
+$userSite = (& python -c "import site; print(site.getusersitepackages())").Trim()
+if (Test-Path $userSite) {
+    Write-Host "Copying user site-packages from $userSite ..."
+    robocopy $userSite (Join-Path $staging 'python\Lib\site-packages') /E /NFL /NDL /NJH /NJS /NP /R:1 /W:1 /XD __pycache__ | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "user site-packages copy failed with exit code $LASTEXITCODE" }
+}
+
 Write-Host 'Copying the app ...'
 Copy-Item (Join-Path $project 'server.py'), (Join-Path $project 'index.html') -Destination (Join-Path $staging 'app') -Force
 Copy-Item (Join-Path $project 'vendor\three.min.js') -Destination (Join-Path $staging 'app\vendor') -Force
@@ -30,7 +37,7 @@ Write-Host 'Staging the separation model ...'
 if ($LASTEXITCODE -ne 0) { throw "stage_models.py failed with exit code $LASTEXITCODE" }
 
 Write-Host 'Checking the staged Python imports ...'
-& (Join-Path $staging 'python\python.exe') -c "import torch, demucs, basic_pitch, librosa, soundfile; print('staged imports ok')"
+& (Join-Path $staging 'python\python.exe') -c "import yaml, torch, torchaudio, demucs, demucs.hf, basic_pitch, librosa, soundfile, onnxruntime; print('staged imports ok')"
 if ($LASTEXITCODE -ne 0) { throw "staged import check failed with exit code $LASTEXITCODE" }
 
 Write-Host 'Building the installer ...'
