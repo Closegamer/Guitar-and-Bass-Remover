@@ -1,0 +1,1610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="writtenBy('Closegamer', 2026)">
+<title>Guitar and Bass AI Smart Remover</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --panel: #161922;
+    --line: #262b38;
+    --text: #e8eaf0;
+    --muted: #8a91a3;
+    --amber: #f5a524;
+    --teal: #5eead4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 26px clamp(14px, 4vw, 48px);
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  h1 { margin: 0; font-size: 20px; letter-spacing: .02em; }
+  h1 span { color: var(--amber); }
+  .load { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  select, button, input { font: inherit; }
+  select {
+    max-width: 260px;
+    padding: 8px 10px;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    color: var(--text);
+    background: #232838;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .btn.accent { color: #1a1206; background: var(--amber); border-color: var(--amber); font-weight: 650; }
+  button:disabled { opacity: .4; cursor: default; }
+  #status { min-height: 1.5em; margin: 18px 0 0; color: var(--muted); }
+  #wave {
+    display: block;
+    width: 100%;
+    height: 240px;
+    margin-top: 14px;
+    background: #11141c;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    cursor: crosshair;
+    touch-action: none;
+  }
+  #mixwave {
+    display: block;
+    width: 100%;
+    height: 88px;
+    margin-top: 8px;
+    background: #10131a;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    cursor: crosshair;
+  }
+  .sources {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    background: #11141c;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+  }
+  .sources button {
+    padding: 6px 12px;
+    color: #c8cedb;
+    background: transparent;
+    border: 0;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+  .sources button:hover:not(:disabled) { background: #232838; }
+  .sources button.on { color: #1a1206; background: var(--amber); font-weight: 650; }
+  .transport {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px 26px;
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .transport .play { min-width: 104px; }
+  .mono { font-variant-numeric: tabular-nums; }
+  #time { min-width: 118px; color: var(--muted); }
+  .speed { display: flex; flex-direction: column; gap: 2px; }
+  .speed span { color: var(--muted); font-size: 13px; }
+  .speed b { color: var(--text); }
+  #speed { width: 190px; accent-color: var(--amber); }
+  #loopinfo { color: var(--amber); font-weight: 500; }
+  .tabpanel {
+    display: flex;
+    flex-direction: column;
+    margin-top: 14px;
+    padding: 10px 16px 8px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .tabhead {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .tabhead strong {
+    color: var(--amber);
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  #tabrange { margin-left: auto; font-variant-numeric: tabular-nums; }
+  #tab { display: block; width: 100%; height: 230px; }
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .workspace .tabpanel { margin-top: 0; }
+  .handpanel {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 16px 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  #handinfo { margin-left: auto; color: var(--muted); }
+  .stringlegend { color: var(--muted); letter-spacing: .12em; }
+  .stringlegend b { color: var(--amber); }
+  #handcanvas {
+    height: 280px;
+    margin-top: 4px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: radial-gradient(ellipse at 50% 15%, #1d2331 0%, #0f1219 72%);
+  }
+  #handcanvas canvas { display: block; width: 100% !important; height: 100% !important; }
+  @media (max-width: 900px) {
+    .workspace { grid-template-columns: 1fr; }
+  }
+  .hint { margin: 12px 0 0; color: #626a7d; font-size: 13px; }
+  footer {
+    margin: 22px 0 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    color: #626a7d;
+    font-size: 12px;
+    text-align: center;
+    letter-spacing: .02em;
+  }
+  #drop {
+    position: fixed;
+    inset: 0;
+    display: none;
+    place-items: center;
+    background: rgba(9, 10, 14, .84);
+    border: 3px dashed var(--amber);
+    font-size: 22px;
+    z-index: 10;
+  }
+  #drop.on { display: grid; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Guitar and Bass AI Smart <span>Remover</span></h1>
+  <div class="load">
+    <select id="tracks" aria-label="Saved songs"><option value="">— saved songs —</option></select>
+    <select id="instrument" aria-label="Instrument">
+      <option value="guitar">Guitar</option>
+      <option value="bass">Bass</option>
+    </select>
+    <select id="bassStrings" aria-label="Bass strings" hidden>
+      <option value="4">4 strings</option>
+      <option value="5">5 strings</option>
+      <option value="6">6 strings</option>
+    </select>
+    <label class="btn accent">Load song<input id="file" type="file" accept="audio/*" hidden></label>
+    <button id="clean" class="btn" type="button">Clean harness</button>
+  </div>
+</header>
+
+<p id="status" aria-live="polite">Pick Guitar or Bass, then load a song — only that part is cut.</p>
+<canvas id="wave" height="240" aria-label="Guitar waveform timeline"></canvas>
+<canvas id="mixwave" height="88" aria-label="Full mix waveform"></canvas>
+
+<section class="transport">
+  <button id="play" class="btn play" disabled>▶ Play</button>
+  <span id="time" class="mono">0:00.0 / 0:00.0</span>
+  <div class="sources" role="group" aria-label="Listening source">
+    <button id="srcMix" disabled>Full mix</button>
+    <button id="srcBacking" disabled>No guitar</button>
+    <button id="srcStem" class="on">Guitar only</button>
+  </div>
+  <div class="speed">
+    <span>Speed <b id="speedval" class="mono">1.00×</b></span>
+    <input id="speed" type="range" min="30" max="100" step="5" value="100" aria-label="Playback speed">
+  </div>
+  <strong id="loopinfo" class="mono">Drag to loop a part</strong>
+  <button id="clearloop" disabled>Clear loop</button>
+</section>
+
+<div class="workspace">
+  <section class="tabpanel">
+    <div class="tabhead">
+      <strong>Tab</strong>
+      <span>auto · draft, trust your ear</span>
+      <span id="tabrange" class="mono"></span>
+    </div>
+    <canvas id="tab" height="170" aria-label="Guitar tab"></canvas>
+  </section>
+  <section class="handpanel">
+    <div class="tabhead">
+      <strong>Hand</strong>
+      <span>3D · follows the tab</span>
+      <span id="handstrings" class="stringlegend">e B G D A <b>E</b> ↓</span>
+      <span id="handinfo" class="mono"></span>
+    </div>
+    <div id="handcanvas" role="img" aria-label="3D fretting hand on the neck"></div>
+  </section>
+</div>
+<p class="hint">Space = play/pause · ←/→ = 3 s · drag on the waveform = loop a part · double-click = clear loop · tab follows the loop · Full mix / No guitar / Guitar only</p>
+<p class="hint">Tab signs: / slide up · \ slide down · ~ vibrato · ↑↓ bend/whammy · zigzag = tremolo picking</p>
+
+<footer>writtenBy('Closegamer', 2026)</footer>
+
+<div id="drop">Drop an audio file</div>
+
+<script src="/vendor/three.min.js"></script>
+<script>
+console.log("writtenBy('Closegamer', 2026)");
+const $ = (id) => document.getElementById(id);
+const canvas = $('wave');
+const ctx = canvas.getContext('2d');
+const mixCanvas = $('mixwave');
+const mixCtx = mixCanvas.getContext('2d');
+const tabCanvas = $('tab');
+const tabCtx = tabCanvas.getContext('2d');
+const audio = new Audio();
+audio.preload = 'auto';
+audio.preservesPitch = true;
+audio.webkitPreservesPitch = true;
+
+let peaks = null;
+let maxPeak = 1;
+let duration = 0;
+let loop = null;
+let drag = null;
+let trackId = null;
+let objectUrl = null;
+let tabNotes = [];
+let tabAvailable = false;
+let instrument = 'guitar';
+let bassStrings = 4;
+
+// The tab data is written for a 4-string bass; 5/6-string basses add a low B below it.
+function tabString(string) {
+  return instrument === 'bass' && bassStrings > 4 ? string + 1 : string;
+}
+let mixPeaks = null;
+let mixMaxPeak = 1;
+let mixUrl = null;
+let mixTrackId = null;
+let mixAvailable = false;
+let backingUrl = null;
+let backingPeaks = null;
+let backingMaxPeak = 1;
+let backingTrackId = null;
+let backingInstrument = null;
+let backingAvailable = false;
+let source = 'stem';
+const STEMS = { guitar: 'guitar.wav', bass: 'bass.wav' };
+const TABS = { guitar: 'tab.json', bass: 'bass_tab.json' };
+const BACKINGS = { guitar: 'no_guitar.wav', bass: 'no_bass.wav' };
+
+const fmt = (t) => {
+  t = Math.max(0, t || 0);
+  return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}.${Math.floor((t % 1) * 10)}`;
+};
+
+function setStatus(text) { $('status').textContent = text; }
+
+function trackName(id) {
+  return $('tracks').querySelector(`option[value="${id}"]`)?.textContent || 'song';
+}
+
+function xToTime(x) {
+  const w = canvas.clientWidth;
+  if (!w || !duration) return 0;
+  return Math.min(1, Math.max(0, x / w)) * duration;
+}
+
+function tabWindow() {
+  if (!duration) return { a: 0, b: 1 };
+  if (loop) return { a: loop.a, b: loop.b };
+  const span = Math.min(8, duration);
+  const a = Math.max(0, Math.min(audio.currentTime - 1.5, duration - span));
+  return { a, b: Math.min(duration, a + span) };
+}
+
+function drawTab() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = tabCanvas.clientWidth;
+  const h = tabCanvas.clientHeight;
+  if (!w || !h) return;
+  if (tabCanvas.width !== Math.round(w * dpr) || tabCanvas.height !== Math.round(h * dpr)) {
+    tabCanvas.width = Math.round(w * dpr);
+    tabCanvas.height = Math.round(h * dpr);
+  }
+  const g = tabCtx;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+
+  const left = 32, right = 12, top = 16, bottom = 10;
+  const rows = instrument === 'bass' ? bassStrings : 6;
+  const labels = instrument === 'bass'
+    ? (bassStrings === 4 ? ['G', 'D', 'A', 'E'] : bassStrings === 5 ? ['G', 'D', 'A', 'E', 'B'] : ['C', 'G', 'D', 'A', 'E', 'B'])
+    : ['e', 'B', 'G', 'D', 'A', 'E'];
+  const rowH = (h - top - bottom) / rows;
+  const x0 = left, x1 = w - right;
+  const win = tabWindow();
+  const span = Math.max(0.1, win.b - win.a);
+  const xFor = (t) => x0 + (t - win.a) / span * (x1 - x0);
+
+  g.font = '12px ui-monospace, SFMono-Regular, Consolas, monospace';
+  g.textBaseline = 'middle';
+  for (let row = 0; row < rows; row++) {
+    const y = top + row * rowH + rowH / 2;
+    g.strokeStyle = 'rgba(255,255,255,.09)';
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(x0, y);
+    g.lineTo(x1, y);
+    g.stroke();
+    g.fillStyle = '#596071';
+    g.textAlign = 'right';
+    g.fillText(labels[row], x0 - 9, y);
+  }
+
+  $('tabrange').textContent = duration ? `${fmt(win.a)} – ${fmt(win.b)}${loop ? ' · loop' : ''}` : '';
+
+  if (!duration) {
+    g.fillStyle = '#596071';
+    g.textAlign = 'center';
+    g.fillText(trackId ? `Preparing the ${instrument}…` : 'Load a song to see its tab', (x0 + x1) / 2, h / 2);
+    return;
+  }
+  if (!tabAvailable) {
+    g.fillStyle = '#596071';
+    g.textAlign = 'center';
+    g.fillText('Auto tab unavailable for this song', (x0 + x1) / 2, h / 2);
+    return;
+  }
+
+  const notes = tabNotes.filter((n) => n.t >= win.a - 0.02 && n.t <= win.b);
+  g.textAlign = 'center';
+  if (!notes.length) {
+    g.fillStyle = '#596071';
+    g.fillText('No notes detected in this part', (x0 + x1) / 2, h / 2);
+  }
+  const rowRight = new Array(rows).fill(-1000);
+  const noteX = new Map();
+  for (const n of notes) {
+    const row = rows - tabString(n.s);
+    if (row < 0 || row >= rows) continue;
+    const y = top + row * rowH + rowH / 2;
+    let label = String(n.f);
+    if (n.slide === 'up') label = '/' + label;
+    else if (n.slide === 'down') label = '\\' + label;
+    if (n.vib) label += '~';
+    else if (n.bend === 'up') label += '↑';
+    else if (n.bend === 'down') label += '↓';
+    const width = label.length * 7.5 + 6;
+    let x = xFor(n.t);
+    if (x - width / 2 < rowRight[row] + 3) x = rowRight[row] + 3 + width / 2;
+    rowRight[row] = x + width / 2;
+    noteX.set(n, x);
+    g.fillStyle = 'rgba(13,15,20,.92)';
+    g.fillRect(x - width / 2, y - 8, width, 16);
+    g.fillStyle = '#f5a524';
+    g.fillText(label, x, y);
+  }
+
+  let runStart = 0;
+  while (runStart < notes.length) {
+    if (!notes[runStart].trem) {
+      runStart++;
+      continue;
+    }
+    const string = tabString(notes[runStart].s);
+    let runEnd = runStart;
+    while (runEnd + 1 < notes.length
+      && notes[runEnd + 1].trem
+      && tabString(notes[runEnd + 1].s) === string
+      && notes[runEnd + 1].t - notes[runEnd].t < 0.25) {
+      runEnd++;
+    }
+    if (runEnd - runStart >= 2) {
+      const row = rows - string;
+      const y = top + row * rowH + rowH / 2 + 9;
+      const xa = Math.max(x0, (noteX.get(notes[runStart]) ?? xFor(notes[runStart].t)) - 8);
+      const xb = Math.min(x1, (noteX.get(notes[runEnd]) ?? xFor(notes[runEnd].t)) + 8);
+      if (xb - xa > 10) {
+        g.strokeStyle = 'rgba(245,165,36,.8)';
+        g.lineWidth = 1.5;
+        g.beginPath();
+        let step = 0;
+        for (let x = xa; x <= xb; x += 3, step++) {
+          const zig = y + (step % 2 ? 2 : -2);
+          if (x === xa) g.moveTo(x, zig);
+          else g.lineTo(x, zig);
+        }
+        g.stroke();
+      }
+    }
+    runStart = runEnd + 1;
+  }
+
+  if (audio.currentTime >= win.a && audio.currentTime <= win.b) {
+    const x = xFor(audio.currentTime);
+    g.fillStyle = 'rgba(255,255,255,.9)';
+    g.fillRect(x - 1, top - 4, 2, h - top - bottom + 8);
+  }
+}
+
+function drawMix() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = mixCanvas.clientWidth;
+  const h = mixCanvas.clientHeight;
+  if (!w || !h) return;
+  if (mixCanvas.width !== Math.round(w * dpr) || mixCanvas.height !== Math.round(h * dpr)) {
+    mixCanvas.width = Math.round(w * dpr);
+    mixCanvas.height = Math.round(h * dpr);
+  }
+  const g = mixCtx;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  const mid = h / 2;
+
+  const xFor = (t) => (duration ? Math.min(1, Math.max(0, t / duration)) * w : 0);
+  if (loop) {
+    const xa = xFor(loop.a);
+    const xb = xFor(loop.b);
+    g.fillStyle = 'rgba(245,165,36,.12)';
+    g.fillRect(xa, 0, xb - xa, h);
+  }
+
+  if (!mixPeaks) {
+    g.fillStyle = '#3a4050';
+    g.fillRect(0, mid, w, 1);
+    g.fillStyle = '#596071';
+    g.font = '11px system-ui, sans-serif';
+    g.textAlign = 'center';
+    g.fillText(mixTrackId ? 'Full mix loading…' : 'No mix loaded', w / 2, mid + 4);
+    return;
+  }
+
+  const n = mixPeaks.length;
+  const amp = h * 0.34;
+  g.beginPath();
+  for (let i = 0; i < n; i++) {
+    const x = (i + 0.5) / n * w;
+    const a = (mixPeaks[i] / mixMaxPeak) * amp;
+    g.moveTo(x, mid - a);
+    g.lineTo(x, mid + a);
+  }
+  g.strokeStyle = 'rgba(122, 162, 247, .6)';
+  g.lineWidth = 1;
+  g.stroke();
+
+  if (duration) {
+    const px = xFor(audio.currentTime);
+    g.fillStyle = 'rgba(255,255,255,.85)';
+    g.fillRect(px - 1, 0, 2, h);
+  }
+
+  g.fillStyle = 'rgba(13,15,20,.78)';
+  g.fillRect(8, 7, 66, 16);
+  g.font = '11px system-ui, sans-serif';
+  g.textAlign = 'left';
+  g.textBaseline = 'alphabetic';
+  g.fillStyle = source === 'mix' ? '#f5a524' : '#596071';
+  g.fillText('FULL MIX', 12, 19);
+}
+
+function draw() {
+  drawTab();
+  drawMix();
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (!w || !h) return;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const mid = h / 2;
+  const xFor = (t) => (duration ? Math.min(1, Math.max(0, t / duration)) * w : 0);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, .045)';
+  ctx.font = '11px system-ui, sans-serif';
+  for (let q = 0; q <= 4; q++) {
+    const x = w * q / 4;
+    ctx.fillRect(x, 0, 1, h);
+    if (duration) {
+      ctx.fillStyle = '#596071';
+      ctx.fillText(fmt(duration * q / 4).replace(/\.\d$/, ''), Math.min(x + 5, w - 34), h - 7);
+      ctx.fillStyle = 'rgba(255, 255, 255, .045)';
+    }
+  }
+
+  if (!peaks) {
+    ctx.fillStyle = '#3a4050';
+    ctx.fillRect(0, mid, w, 1);
+    $('play').disabled = true;
+    return;
+  }
+
+  const shownPeaks = source === 'backing' && backingPeaks ? backingPeaks : peaks;
+  const shownMax = source === 'backing' && backingPeaks ? backingMaxPeak : maxPeak;
+  const label = source === 'backing'
+    ? `NO ${instrument.toUpperCase()} · FULL TRACK`
+    : source === 'mix'
+      ? `${instrument.toUpperCase()} PART`
+      : `${instrument.toUpperCase()} ONLY`;
+
+  const sel = drag && drag.moved
+    ? { a: xToTime(Math.min(drag.start, drag.end)), b: xToTime(Math.max(drag.start, drag.end)) }
+    : loop;
+  if (sel) {
+    const xa = xFor(sel.a);
+    const xb = xFor(sel.b);
+    ctx.fillStyle = 'rgba(245, 165, 36, .12)';
+    ctx.fillRect(xa, 0, xb - xa, h);
+  }
+
+  ctx.beginPath();
+  const n = shownPeaks.length;
+  const amp = h * 0.44;
+  for (let i = 0; i < n; i++) {
+    const x = (i + 0.5) / n * w;
+    const a = (shownPeaks[i] / shownMax) * amp;
+    ctx.moveTo(x, mid - a);
+    ctx.lineTo(x, mid + a);
+  }
+  ctx.strokeStyle = 'rgba(94, 234, 212, .78)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  if (sel) {
+    ctx.strokeStyle = '#f5a524';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (const t of [sel.a, sel.b]) {
+      const x = xFor(t);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
+    }
+    ctx.stroke();
+  }
+
+  const px = xFor(audio.currentTime);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(px - 1, 0, 2, h);
+
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.fillStyle = 'rgba(13,15,20,.78)';
+  ctx.fillRect(8, 8, ctx.measureText(label).width + 12, 16);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#6b7385';
+  ctx.fillText(label, 12, 20);
+
+  $('time').textContent = `${fmt(audio.currentTime)} / ${fmt(duration)}`;
+  $('play').disabled = !duration;
+}
+
+function computePeaks(buffer, buckets) {
+  const out = new Float32Array(buckets);
+  const left = buffer.getChannelData(0);
+  const right = buffer.numberOfChannels > 1 ? buffer.getChannelData(1) : null;
+  const total = buffer.length;
+  for (let i = 0; i < total; i++) {
+    const v = right ? (left[i] + right[i]) * 0.5 : left[i];
+    const bucket = Math.min(buckets - 1, (i / total * buckets) | 0);
+    const a = Math.abs(v);
+    if (a > out[bucket]) out[bucket] = a;
+  }
+  return out;
+}
+
+function updateLoopInfo() {
+  $('clearloop').disabled = !loop;
+  $('loopinfo').textContent = loop
+    ? `Loop ${fmt(loop.a)} – ${fmt(loop.b)} (${(loop.b - loop.a).toFixed(1)} s)`
+    : 'Drag to loop a part';
+}
+
+function applySpeed() {
+  const rate = Number($('speed').value) / 100;
+  audio.playbackRate = rate;
+  audio.preservesPitch = true;
+  audio.webkitPreservesPitch = true;
+  $('speedval').textContent = rate.toFixed(2) + '×';
+}
+
+async function refreshTracks() {
+  const { tracks } = await (await fetch('/api/tracks')).json();
+  const select = $('tracks');
+  select.innerHTML = '<option value="">— saved songs —</option>';
+  for (const track of tracks) {
+    if (!track.ready) continue;
+    const option = document.createElement('option');
+    option.value = track.id;
+    option.textContent = track.name;
+    select.append(option);
+  }
+  if (trackId) select.value = trackId;
+  return tracks;
+}
+
+let loadToken = 0;
+
+async function loadTrack(id) {
+  trackId = id;
+  $('tracks').value = id;
+  loop = null;
+  updateLoopInfo();
+  await loadStem(id, instrument, 0, false);
+}
+
+async function loadStem(id, inst, at, wasPlaying) {
+  const token = ++loadToken;
+  instrument = inst;
+  $('instrument').value = inst;
+  source = 'stem';
+  if (mixTrackId !== id) {
+    if (mixUrl) URL.revokeObjectURL(mixUrl);
+    mixUrl = null;
+    mixPeaks = null;
+    mixMaxPeak = 1;
+    mixAvailable = false;
+    mixTrackId = null;
+  }
+  if (backingTrackId !== id || backingInstrument !== inst) {
+    if (backingUrl) URL.revokeObjectURL(backingUrl);
+    backingUrl = null;
+    backingPeaks = null;
+    backingMaxPeak = 1;
+    backingAvailable = false;
+    backingTrackId = null;
+    backingInstrument = null;
+  }
+  updateSourceButtons();
+  audio.pause();
+  peaks = null;
+  duration = 0;
+  tabNotes = [];
+  tabAvailable = false;
+  $('play').disabled = true;
+  setStatus(`Loading the ${inst}…`);
+  draw();
+  try {
+    const res = await fetch(`/media/${id}/${STEMS[inst]}`);
+    if (!res.ok) {
+      if (res.status === 404) {
+        if (await prepareStem(id, inst)) return loadStem(id, inst, at, wasPlaying);
+        return;
+      }
+      throw new Error(`server returned ${res.status}`);
+    }
+    const buffer = await res.arrayBuffer();
+    if (token !== loadToken) return;
+    const blobUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl = blobUrl;
+    await new Promise((resolve, reject) => {
+      audio.onloadedmetadata = resolve;
+      audio.onerror = () => reject(new Error('the browser cannot play this audio file'));
+      audio.src = blobUrl;
+      audio.load();
+    });
+    if (token !== loadToken) return;
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      const decoded = await actx.decodeAudioData(buffer);
+      if (token !== loadToken) return;
+      duration = decoded.duration || audio.duration;
+      peaks = computePeaks(decoded, 2400);
+      maxPeak = 0;
+      for (const p of peaks) if (p > maxPeak) maxPeak = p;
+      if (!maxPeak) maxPeak = 1;
+    } finally {
+      actx.close();
+    }
+    if (!duration) duration = audio.duration;
+    audio.currentTime = Math.min(at || 0, duration);
+    applySpeed();
+    $('instrument').disabled = false;
+    updateSourceButtons();
+    loadMix(id);
+    loadBacking(id, inst);
+    const gotTab = await fetchTab(id, inst);
+    if (token !== loadToken) return;
+    setStatus(gotTab
+      ? `“${trackName(id)}” — ${inst} tab below; drag a loop to freeze a part.`
+      : `“${trackName(id)}” — writing the ${inst} tab…`);
+    if (!gotTab) generateTab(id, inst);
+    if (wasPlaying) audio.play();
+  } catch (err) {
+    setStatus(`Could not load the ${inst}: ` + err.message);
+  }
+  draw();
+}
+
+function updateSourceButtons() {
+  $('srcStem').textContent = instrument === 'bass' ? 'Bass only' : 'Guitar only';
+  $('srcStem').classList.toggle('on', source === 'stem');
+  $('srcBacking').textContent = instrument === 'bass' ? 'No bass' : 'No guitar';
+  $('srcBacking').classList.toggle('on', source === 'backing');
+  $('srcBacking').disabled = !backingAvailable;
+  $('srcMix').classList.toggle('on', source === 'mix');
+  $('srcMix').disabled = !mixAvailable;
+  $('bassStrings').hidden = instrument !== 'bass';
+  $('bassStrings').value = String(bassStrings);
+}
+
+async function loadMix(id) {
+  if (mixTrackId === id) return;
+  mixTrackId = id;
+  mixAvailable = false;
+  updateSourceButtons();
+  draw();
+  try {
+    const res = await fetch(`/media/${id}/original`);
+    if (!res.ok) throw new Error(`server returned ${res.status}`);
+    const buffer = await res.arrayBuffer();
+    const blobUrl = URL.createObjectURL(new Blob([buffer], { type: res.headers.get('content-type') || 'audio/mpeg' }));
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    let decoded;
+    try {
+      decoded = await actx.decodeAudioData(buffer);
+    } finally {
+      actx.close();
+    }
+    if (trackId !== id) {
+      URL.revokeObjectURL(blobUrl);
+      return;
+    }
+    if (mixUrl) URL.revokeObjectURL(mixUrl);
+    mixUrl = blobUrl;
+    mixPeaks = computePeaks(decoded, 1600);
+    mixMaxPeak = 0;
+    for (const p of mixPeaks) if (p > mixMaxPeak) mixMaxPeak = p;
+    if (!mixMaxPeak) mixMaxPeak = 1;
+    mixAvailable = true;
+    updateSourceButtons();
+    draw();
+  } catch (err) {
+    if (trackId === id) {
+      mixTrackId = null;
+      setStatus('Full mix unavailable: ' + err.message);
+    }
+  }
+}
+
+async function loadBacking(id, inst) {
+  try {
+    let res = await fetch(`/media/${id}/${BACKINGS[inst]}`);
+    if (!res.ok && res.status === 404 && trackId === id && instrument === inst) {
+      if (!(await prepareStem(id, inst))) return;
+      res = await fetch(`/media/${id}/${BACKINGS[inst]}`);
+    }
+    if (!res.ok) return;
+    const buffer = await res.arrayBuffer();
+    if (trackId !== id || instrument !== inst) return;
+    const blobUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+    if (backingUrl) URL.revokeObjectURL(backingUrl);
+    backingUrl = blobUrl;
+    backingTrackId = id;
+    backingInstrument = inst;
+    backingAvailable = true;
+    updateSourceButtons();
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      const decoded = await actx.decodeAudioData(buffer);
+      if (trackId !== id || instrument !== inst) return;
+      backingPeaks = computePeaks(decoded, 2400);
+      backingMaxPeak = 0;
+      for (const p of backingPeaks) if (p > backingMaxPeak) backingMaxPeak = p;
+      if (!backingMaxPeak) backingMaxPeak = 1;
+      draw();
+    } catch {
+      // audio still plays without a waveform
+    } finally {
+      actx.close();
+    }
+  } catch {
+    // no play-along mix for this song; the button stays disabled
+  }
+}
+
+function backingQuiet(at) {
+  if (!backingPeaks || !backingMaxPeak || !duration) return false;
+  const index = Math.floor((at / duration) * backingPeaks.length);
+  const from = Math.max(0, index - 20);
+  const to = Math.min(backingPeaks.length, index + 20);
+  let max = 0;
+  for (let i = from; i < to; i++) if (backingPeaks[i] > max) max = backingPeaks[i];
+  return max < backingMaxPeak * 0.02;
+}
+
+async function setSource(next) {
+  if (next === source || !duration) return;
+  const url = next === 'mix' ? mixUrl : next === 'backing' ? backingUrl : objectUrl;
+  if (!url) return;
+  const at = audio.currentTime >= duration - 0.05 ? 0 : audio.currentTime;
+  const previous = source;
+  audio.pause();
+  source = next;
+  updateSourceButtons();
+  try {
+    await new Promise((resolve, reject) => {
+      audio.onloadedmetadata = resolve;
+      audio.onerror = () => reject(new Error('the browser cannot play this source'));
+      audio.src = url;
+      audio.load();
+    });
+    audio.currentTime = Math.min(at, audio.duration || at);
+    applySpeed();
+    audio.play().catch(() => {
+      setStatus('Press Play to listen to this source.');
+    });
+    const label = source === 'mix' ? 'full mix'
+      : source === 'backing' ? `full track without ${instrument}`
+      : `${instrument} only`;
+    setStatus(source === 'backing' && backingQuiet(at)
+      ? 'Playing the full track without guitar. This part is quiet — no other instruments here.'
+      : `Playing the ${label}.`);
+  } catch (err) {
+    source = previous;
+    updateSourceButtons();
+    const back = previous === 'mix' ? mixUrl : previous === 'backing' ? backingUrl : objectUrl;
+    if (back) {
+      audio.src = back;
+      audio.load();
+    }
+    setStatus('Could not switch source: ' + err.message);
+  }
+  draw();
+}
+
+async function switchInstrument(inst) {
+  if (!trackId || inst === instrument) return;
+  const at = audio.currentTime;
+  const wasPlaying = !audio.paused;
+  await loadStem(trackId, inst, at, wasPlaying);
+}
+
+async function fetchTab(id, inst) {
+  try {
+    const res = await fetch(`/media/${id}/${TABS[inst]}`);
+    if (!res.ok) return false;
+    const notes = await res.json();
+    if (id !== trackId || inst !== instrument) return false;
+    tabNotes = notes;
+    tabAvailable = true;
+    draw();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function prepareStem(id, inst) {
+  setStatus(`Cutting the ${inst} from the song — the first time can take a minute…`);
+  try {
+    await fetch(`/api/tracks/${id}/prepare/${inst}`, { method: 'POST' });
+  } catch {
+    setStatus(`Could not start cutting the ${inst}.`);
+    return false;
+  }
+  const started = Date.now();
+  while (trackId === id) {
+    await new Promise((r) => setTimeout(r, 2000));
+    let status;
+    try {
+      status = await (await fetch(`/api/tracks/${id}`)).json();
+    } catch {
+      continue;
+    }
+    if (status.status === 'error') {
+      setStatus(`Could not cut the ${inst}: ${status.error}`);
+      return false;
+    }
+    if (status.status === 'done') {
+      setStatus(`“${trackName(id)}” — ${inst} is ready.`);
+      return true;
+    }
+    const title = status.stage === `tab-${inst}` ? `Writing the ${inst} tab` : `Cutting the ${inst}`;
+    setStatus(`${title}… ${Math.round((Date.now() - started) / 1000)} s`);
+  }
+  return false;
+}
+
+async function generateTab(id, inst) {
+  try {
+    await fetch(`/api/tracks/${id}/prepare/${inst}`, { method: 'POST' });
+  } catch {
+    setStatus(`Could not request the ${inst} tab.`);
+    return;
+  }
+  const started = Date.now();
+  while (trackId === id && instrument === inst) {
+    await new Promise((r) => setTimeout(r, 1500));
+    let status;
+    try {
+      status = await (await fetch(`/api/tracks/${id}`)).json();
+    } catch {
+      continue;
+    }
+    if (status.status === 'done') {
+      if (await fetchTab(id, inst)) {
+        setStatus(`“${trackName(id)}” — ${inst} tab ready. Drag a loop to freeze a part.`);
+      }
+      return;
+    }
+    if (status.status === 'error') {
+      setStatus(`Auto ${inst} tab failed: ` + (status.error || 'unknown error'));
+      return;
+    }
+    setStatus(`Writing the ${inst} tab… ${Math.round((Date.now() - started) / 1000)} s`);
+  }
+}
+
+async function upload(file) {
+  const inst = $('instrument').value === 'bass' ? 'bass' : 'guitar';
+  instrument = inst;
+  setStatus(`Cutting the ${inst} from “${file.name}” — the first run can take a few minutes…`);
+  const started = Date.now();
+  let id;
+  try {
+    const res = await fetch('/api/tracks', {
+      method: 'POST',
+      headers: { 'X-Filename': encodeURIComponent(file.name), 'X-Instrument': inst },
+      body: file,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    id = data.id;
+  } catch (err) {
+    return setStatus('Upload failed: ' + err.message);
+  }
+  while (true) {
+    await new Promise((r) => setTimeout(r, 1500));
+    let status;
+    try {
+      status = await (await fetch(`/api/tracks/${id}`)).json();
+    } catch {
+      continue;
+    }
+    if (status.status === 'done') break;
+    if (status.status === 'error') {
+      return setStatus(`Could not prepare the ${inst}: ${status.error}`);
+    }
+    const stage = status.stage === `tab-${inst}` ? `Writing the ${inst} tab`
+      : status.stage === `stem-${inst}` ? `Cutting the ${inst} from the song`
+      : 'Preparing the song';
+    setStatus(`${stage}… ${Math.round((Date.now() - started) / 1000)} s`);
+  }
+  instrument = inst;
+  await refreshTracks();
+  await loadTrack(id);
+}
+
+function togglePlay() {
+  if (!duration) return;
+  if (audio.paused) {
+    if (loop && (audio.currentTime < loop.a || audio.currentTime >= loop.b)) audio.currentTime = loop.a;
+    audio.play();
+  } else {
+    audio.pause();
+  }
+}
+
+function tick() {
+  if (loop && audio.currentTime >= loop.b) audio.currentTime = loop.a;
+  draw();
+  if (!audio.paused && !audio.ended) requestAnimationFrame(tick);
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (!duration) return;
+  canvas.setPointerCapture(e.pointerId);
+  drag = { start: e.offsetX, end: e.offsetX, moved: false };
+  e.preventDefault();
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  drag.end = e.offsetX;
+  if (Math.abs(drag.end - drag.start) > 3) drag.moved = true;
+  draw();
+});
+canvas.addEventListener('pointerup', (e) => {
+  if (!drag) return;
+  drag.end = e.offsetX;
+  const wasDrag = drag.moved;
+  const a = xToTime(Math.min(drag.start, drag.end));
+  const b = xToTime(Math.max(drag.start, drag.end));
+  if (wasDrag && b - a > 0.15) {
+    loop = { a, b };
+    if (audio.currentTime < a || audio.currentTime > b) audio.currentTime = a;
+  } else if (!wasDrag) {
+    audio.currentTime = a;
+  }
+  drag = null;
+  updateLoopInfo();
+  draw();
+});
+canvas.addEventListener('pointercancel', () => { drag = null; draw(); });
+canvas.addEventListener('dblclick', () => {
+  loop = null;
+  updateLoopInfo();
+  draw();
+});
+
+$('play').addEventListener('click', togglePlay);
+$('srcStem').addEventListener('click', () => setSource('stem'));
+$('srcBacking').addEventListener('click', () => setSource('backing'));
+$('srcMix').addEventListener('click', () => setSource('mix'));
+mixCanvas.addEventListener('pointerdown', (e) => {
+  if (!duration) return;
+  const rect = mixCanvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = Math.max(0, Math.min(duration, x * duration));
+  draw();
+});
+$('clearloop').addEventListener('click', () => {
+  loop = null;
+  updateLoopInfo();
+  draw();
+});
+$('speed').addEventListener('input', applySpeed);
+$('instrument').addEventListener('change', (e) => {
+  if (trackId) return switchInstrument(e.target.value);
+  instrument = e.target.value;
+  updateSourceButtons();
+});
+$('bassStrings').addEventListener('change', (e) => {
+  bassStrings = Number(e.target.value) || 4;
+  if (handView && instrument === 'bass') buildHandNeck('bass');
+  draw();
+});
+$('tracks').addEventListener('change', (e) => { if (e.target.value) loadTrack(e.target.value); });
+$('file').addEventListener('change', (e) => {
+  if (e.target.files[0]) upload(e.target.files[0]);
+  e.target.value = '';
+});
+$('clean').addEventListener('click', async () => {
+  if (!confirm('Delete every saved song and all generated stems, tabs and play-along mixes? This cannot be undone.')) return;
+  try {
+    const res = await fetch('/api/tracks', { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    location.reload();
+  } catch (err) {
+    setStatus('Could not clean the harness: ' + err.message);
+  }
+});
+
+audio.addEventListener('play', () => {
+  $('play').textContent = '⏸ Pause';
+  requestAnimationFrame(tick);
+});
+audio.addEventListener('pause', () => {
+  $('play').textContent = '▶ Play';
+  draw();
+});
+audio.addEventListener('ended', () => {
+  $('play').textContent = '▶ Play';
+  draw();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.closest('input, select, button, textarea')) return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePlay();
+  } else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+    e.preventDefault();
+    const step = e.code === 'ArrowLeft' ? -3 : 3;
+    audio.currentTime = Math.min(duration, Math.max(0, audio.currentTime + step));
+    draw();
+  }
+});
+
+let dragDepth = 0;
+window.addEventListener('dragenter', (e) => {
+  e.preventDefault();
+  dragDepth++;
+  $('drop').classList.add('on');
+});
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('dragleave', () => {
+  if (--dragDepth <= 0) {
+    dragDepth = 0;
+    $('drop').classList.remove('on');
+  }
+});
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragDepth = 0;
+  $('drop').classList.remove('on');
+  const file = e.dataTransfer.files[0];
+  if (file) upload(file);
+});
+window.addEventListener('resize', draw);
+
+// ---------- 3D fretting hand ----------
+let handView = null;
+
+function handFretX(fret) {
+  const hand = handView.hand;
+  return hand.nutX + hand.scale * (1 - Math.pow(2, -fret / 12));
+}
+
+function handStringZ(string) {
+  const hand = handView.hand;
+  return (0.5 - (string - 1) / Math.max(1, hand.count - 1)) * hand.spread;
+}
+
+function clearGroup(group) {
+  for (const child of [...group.children]) {
+    group.remove(child);
+    if (child.geometry) child.geometry.dispose();
+  }
+}
+
+function buildHandNeck(instrumentName) {
+  const view = handView;
+  const hand = view.hand;
+  clearGroup(view.neck);
+  view.stringGlows = [];
+  const bass = instrumentName === 'bass';
+  hand.instrument = instrumentName;
+  const stringCount = bass ? bassStrings : 6;
+  hand.count = stringCount;
+  hand.width = bass ? (stringCount === 4 ? 0.58 : stringCount === 5 ? 0.64 : 0.7) : 0.48;
+  hand.spread = bass ? (stringCount === 4 ? 0.42 : stringCount === 5 ? 0.46 : 0.5) : 0.34;
+  hand.nutX = -1.5;
+  hand.scale = bass ? 4.5 : 4.2;
+
+  const length = hand.scale * (1 - Math.pow(2, -19 / 12)) + 0.12;
+  const centerX = hand.nutX + length / 2;
+
+  const board = new THREE.Mesh(new THREE.BoxGeometry(length, 0.12, hand.width), view.mats.wood);
+  board.position.set(centerX, -0.06, 0);
+  board.receiveShadow = true;
+  view.neck.add(board);
+
+  const nut = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.16, hand.width + 0.02), view.mats.bone);
+  nut.position.set(hand.nutX, 0.005, 0);
+  view.neck.add(nut);
+
+  for (let fret = 1; fret <= 19; fret++) {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.02, hand.width + 0.01), view.mats.fret);
+    bar.position.set(handFretX(fret), 0.011, 0);
+    view.neck.add(bar);
+  }
+
+  for (const fret of [3, 5, 7, 9, 12, 15, 17]) {
+    const x = (handFretX(fret) + handFretX(fret - 1)) / 2;
+    const zs = fret === 12 ? [-0.12, 0.12] : [0];
+    for (const z of zs) {
+      const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.008, 12), view.mats.bone);
+      dot.position.set(x, 0.003, z);
+      view.neck.add(dot);
+    }
+  }
+
+  for (let i = 0; i < hand.count; i++) {
+    const z = (0.5 - i / Math.max(1, hand.count - 1)) * hand.spread;
+    const lowRadius = bass ? 0.023 : 0.015;
+    const highRadius = bass ? 0.009 : 0.0045;
+    const radius = highRadius + (lowRadius - highRadius) * (hand.count - 1 - i) / Math.max(1, hand.count - 1);
+    const geometry = new THREE.CylinderGeometry(radius, radius, length + 0.16, 8);
+    geometry.rotateZ(Math.PI / 2);
+    const string = new THREE.Mesh(geometry, i === 0 ? view.mats.stringLow : view.mats.string);
+    string.position.set(centerX - 0.02, 0.06, z);
+    view.neck.add(string);
+
+    const glowGeometry = new THREE.CylinderGeometry(Math.max(radius * 2, 0.014), Math.max(radius * 2, 0.014), length + 0.2, 10);
+    glowGeometry.rotateZ(Math.PI / 2);
+    const glow = new THREE.Mesh(glowGeometry, view.mats.openString);
+    glow.position.copy(string.position);
+    glow.visible = false;
+    view.neck.add(glow);
+    if (!view.stringGlows) view.stringGlows = [];
+    view.stringGlows.push(glow);
+  }
+
+  $('handstrings').innerHTML = bass
+    ? (stringCount === 4 ? 'G D A <b>E</b> ↓' : stringCount === 5 ? 'G D A E <b>B</b> ↓' : 'C G D A E <b>B</b> ↓')
+    : 'e B G D A <b>E</b> ↓';
+}
+
+function handChord(time) {
+  if (!tabNotes.length) return [];
+  let onset = null;
+  for (const note of tabNotes) {
+    if (note.t <= time + 0.09 && (onset === null || note.t > onset)) onset = note.t;
+  }
+  if (onset === null) onset = tabNotes[0].t;
+  return tabNotes.filter((note) => Math.abs(note.t - onset) < 0.06);
+}
+
+function placeSegment(mesh, from, to) {
+  const direction = new THREE.Vector3().subVectors(to, from);
+  const length = direction.length();
+  if (length < 0.0001) return;
+  mesh.position.copy(from).addScaledVector(direction, 0.5);
+  mesh.scale.set(1, length, 1);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+}
+
+function updateHand(view, dt) {
+  const hand = view.hand;
+  const time = duration ? audio.currentTime : 0;
+  const chord = handChord(time);
+  const fretted = chord.filter((note) => note.f > 0).sort((a, b) => a.f - b.f).slice(0, 4);
+  const openNotes = chord.filter((note) => note.f === 0);
+  const openOnly = chord.length > 0 && !fretted.length;
+
+  if (view.stringGlows) {
+    for (let index = 0; index < view.stringGlows.length; index++) {
+      view.stringGlows[index].visible = openNotes.some((note) => tabString(note.s) === index + 1);
+    }
+  }
+
+  let anchorX = hand.nutX + hand.scale * 0.22;
+  if (fretted.length) {
+    anchorX = fretted.reduce((sum, note) => sum + handFretX(note.f), 0) / fretted.length;
+  } else if (openOnly) {
+    anchorX = hand.nutX + 0.15;
+  }
+  const palmTarget = new THREE.Vector3(anchorX + 0.08, 0.1, -0.42);
+  hand.pos.lerp(palmTarget, 1 - Math.exp(-9 * dt));
+
+  view.neck.position.x = -hand.pos.x;
+  view.handGroup.position.x = -hand.pos.x;
+  view.palmGroup.position.copy(hand.pos);
+  view.palmGroup.rotation.set(0, 0, 0);
+
+  const baseFret = fretted.length ? fretted[0].f : 3;
+  const baseString = fretted.length ? tabString(fretted[0].s) : Math.ceil(hand.count / 2);
+
+  for (let i = 0; i < 4; i++) {
+    const finger = hand.fingers[i];
+    const note = fretted[i];
+    const key = note ? `${note.t}:${note.f}:${tabString(note.s)}` : '';
+    if (key !== finger.noteKey) {
+      finger.noteKey = key;
+      finger.lift = note ? 0.055 : 0;
+    } else {
+      finger.lift *= Math.exp(-dt * 7);
+    }
+
+    const mcp = new THREE.Vector3(hand.pos.x + finger.offsetX, hand.pos.y + 0.04, hand.pos.z + 0.2);
+    let target;
+    if (note) {
+      target = new THREE.Vector3(handFretX(note.f) - 0.02, 0.09 + finger.lift, handStringZ(tabString(note.s)));
+    } else {
+      const hoverFret = Math.min(19, Math.max(1, baseFret + i));
+      const hoverString = Math.min(hand.count, Math.max(1, baseString + (i % 2)));
+      target = new THREE.Vector3(handFretX(hoverFret) - 0.02, 0.13, handStringZ(hoverString));
+    }
+    if (!finger.ready) {
+      finger.tip.copy(target);
+      finger.ready = true;
+    }
+    finger.tip.lerp(target, 1 - Math.exp(-14 * dt));
+
+    const pip = note
+      ? new THREE.Vector3(mcp.x + (finger.tip.x - mcp.x) * 0.25, 0.31 + finger.lift * 0.4, -0.14)
+      : new THREE.Vector3(mcp.x + (finger.tip.x - mcp.x) * 0.3, 0.31, -0.15);
+    const dip = note
+      ? new THREE.Vector3(finger.tip.x + 0.015, 0.16 + finger.lift * 0.3, finger.tip.z + 0.04)
+      : new THREE.Vector3(finger.tip.x + 0.01, 0.23, finger.tip.z + 0.04);
+
+    const joints = [mcp, pip, dip, finger.tip];
+    for (let segment = 0; segment < 3; segment++) {
+      placeSegment(finger.segments[segment], joints[segment], joints[segment + 1]);
+    }
+    for (let joint = 0; joint < 3; joint++) {
+      finger.joints[joint].position.copy(joints[joint]);
+    }
+    for (let creaseIndex = 0; creaseIndex < 2; creaseIndex++) {
+      const joint = creaseIndex + 1;
+      const direction = new THREE.Vector3().subVectors(joints[joint + 1], joints[joint - 1]).normalize();
+      finger.creases[creaseIndex].position.copy(joints[joint]);
+      finger.creases[creaseIndex].quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), direction);
+    }
+    finger.tipMesh.position.copy(finger.tip);
+    finger.nail.position.set(finger.tip.x + 0.008, finger.tip.y + 0.032, finger.tip.z + 0.018);
+    finger.ring.visible = Boolean(note);
+    if (note) finger.ring.position.set(finger.tip.x, 0.14, finger.tip.z);
+  }
+
+  const frets = [...new Set(fretted.map((note) => note.f))].sort((a, b) => a - b);
+  const label = !trackId ? 'load a song'
+    : !duration ? 'preparing…'
+      : frets.length ? `${instrument} · fret ${frets.join(' ')}`
+        : openOnly ? `${instrument} · open strings`
+          : `${instrument} · at rest`;
+  if (label !== hand.label) {
+    hand.label = label;
+    view.info.textContent = label;
+  }
+}
+
+function resizeHand() {
+  if (!handView) return;
+  const width = handView.host.clientWidth;
+  const height = handView.host.clientHeight;
+  if (!width || !height) return;
+  handView.renderer.setSize(width, height, false);
+  const halfHeight = 0.62;
+  const aspect = width / height;
+  const camera = handView.camera;
+  camera.left = -halfHeight * aspect;
+  camera.right = halfHeight * aspect;
+  camera.top = halfHeight;
+  camera.bottom = -halfHeight;
+  camera.updateProjectionMatrix();
+}
+
+function renderHand(now) {
+  if (!handView) return;
+  const view = handView;
+  const dt = Math.min(0.05, Math.max(0.001, (now - view.last) / 1000));
+  view.last = now;
+  if (view.hand.instrument !== instrument) buildHandNeck(instrument);
+  updateHand(view, dt);
+  view.renderer.render(view.scene, view.camera);
+  requestAnimationFrame(renderHand);
+}
+
+function initHand() {
+  const host = $('handcanvas');
+  if (!window.THREE) {
+    $('handinfo').textContent = '3D library missing';
+    return;
+  }
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  } catch {
+    $('handinfo').textContent = 'WebGL unavailable';
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  host.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 40);
+  camera.up.set(0, 0, -1);
+  camera.position.set(0, 3, 0);
+  camera.lookAt(0, 0.05, 0);
+
+  scene.add(new THREE.HemisphereLight(0xfff0dc, 0x0d0f14, 0.65));
+  const key = new THREE.DirectionalLight(0xfff6ea, 0.95);
+  key.position.set(2, 4, 3);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.left = -2.4;
+  key.shadow.camera.right = 2.4;
+  key.shadow.camera.top = 2.4;
+  key.shadow.camera.bottom = -2.4;
+  key.shadow.camera.near = 0.5;
+  key.shadow.camera.far = 10;
+  key.shadow.bias = -0.0006;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0x5eead4, 0.3);
+  rim.position.set(-3, 1.5, -2);
+  scene.add(rim);
+  const fill = new THREE.DirectionalLight(0xffd8c2, 0.35);
+  fill.position.set(-2, 2, 3);
+  scene.add(fill);
+  const backFill = new THREE.DirectionalLight(0xbfd4ff, 0.3);
+  backFill.position.set(-1, 2, -3);
+  scene.add(backFill);
+
+  const skinCanvas = document.createElement('canvas');
+  skinCanvas.width = skinCanvas.height = 256;
+  const skinPaint = skinCanvas.getContext('2d');
+  skinPaint.fillStyle = '#ffffff';
+  skinPaint.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 1100; i++) {
+    skinPaint.fillStyle = `rgba(120, 64, 44, ${Math.random() * 0.05})`;
+    skinPaint.beginPath();
+    skinPaint.arc(Math.random() * 256, Math.random() * 256, Math.random() * 2.4 + 0.3, 0, Math.PI * 2);
+    skinPaint.fill();
+  }
+  const skinMap = new THREE.CanvasTexture(skinCanvas);
+  skinMap.wrapS = THREE.RepeatWrapping;
+  skinMap.wrapT = THREE.RepeatWrapping;
+  skinMap.repeat.set(2, 2);
+  skinMap.encoding = THREE.sRGBEncoding;
+
+  const mats = {
+    wood: new THREE.MeshStandardMaterial({ color: 0x2a1a10, roughness: 0.82 }),
+    fret: new THREE.MeshStandardMaterial({ color: 0xa9b2bc, metalness: 0.9, roughness: 0.3 }),
+    string: new THREE.MeshStandardMaterial({ color: 0xdce3ea, metalness: 0.7, roughness: 0.28 }),
+    stringLow: new THREE.MeshStandardMaterial({ color: 0xc2a37f, metalness: 0.75, roughness: 0.34 }),
+    bone: new THREE.MeshStandardMaterial({ color: 0xd9cdb2, roughness: 0.55 }),
+    skin: new THREE.MeshStandardMaterial({ color: 0xbe8a6a, roughness: 0.62, map: skinMap }),
+    skinShade: new THREE.MeshStandardMaterial({ color: 0xa87355, roughness: 0.68 }),
+    nail: new THREE.MeshStandardMaterial({ color: 0xd8b197, roughness: 0.48 }),
+    sleeve: new THREE.MeshStandardMaterial({ color: 0x232a3a, roughness: 0.9 }),
+    glow: new THREE.MeshStandardMaterial({ color: 0xf5a524, emissive: 0xf5a524, emissiveIntensity: 0.8, roughness: 0.4 }),
+    openString: new THREE.MeshBasicMaterial({ color: 0xf5a524 }),
+  };
+
+  const neck = new THREE.Group();
+  scene.add(neck);
+  const handGroup = new THREE.Group();
+  scene.add(handGroup);
+
+  const palmGroup = new THREE.Group();
+  handGroup.add(palmGroup);
+
+  const palmShape = new THREE.Shape();
+  palmShape.moveTo(-0.34, 0.16);
+  palmShape.quadraticCurveTo(-0.38, 0.2, -0.31, 0.22);
+  palmShape.quadraticCurveTo(0, 0.25, 0.31, 0.22);
+  palmShape.quadraticCurveTo(0.38, 0.2, 0.34, 0.16);
+  palmShape.quadraticCurveTo(0.3, 0.02, 0.24, -0.12);
+  palmShape.quadraticCurveTo(0.19, -0.2, 0.13, -0.22);
+  palmShape.lineTo(-0.13, -0.22);
+  palmShape.quadraticCurveTo(-0.19, -0.2, -0.24, -0.12);
+  palmShape.quadraticCurveTo(-0.3, 0.02, -0.34, 0.16);
+
+  const palmGeometry = new THREE.ExtrudeGeometry(palmShape, {
+    depth: 0.1,
+    bevelEnabled: true,
+    bevelSegments: 2,
+    steps: 1,
+    bevelSize: 0.02,
+    bevelThickness: 0.02,
+    curveSegments: 16,
+  });
+  palmGeometry.rotateX(Math.PI / 2);
+  const palmMesh = new THREE.Mesh(palmGeometry, mats.skin);
+  palmMesh.castShadow = true;
+  palmGroup.add(palmMesh);
+
+  const tendonGeometry = new THREE.CylinderGeometry(0.006, 0.006, 0.26, 6);
+  tendonGeometry.rotateX(Math.PI / 2);
+  for (const [x, y] of [[-0.27, 0.015], [-0.09, 0.017], [0.09, 0.017], [0.27, 0.015]]) {
+    const tendon = new THREE.Mesh(tendonGeometry, mats.skin);
+    tendon.position.set(x, y, -0.02);
+    palmGroup.add(tendon);
+  }
+
+  const hand = {
+    instrument: null,
+    count: 6,
+    spread: 0.34,
+    nutX: -1.5,
+    scale: 4.2,
+    pos: new THREE.Vector3(0, 0.1, -0.42),
+    fingers: [],
+    label: '',
+  };
+
+  const sphereGeometry = new THREE.SphereGeometry(1, 12, 10);
+  const fingerSpecs = [
+    { offsetX: -0.3, radii: [0.05, 0.044, 0.037] },
+    { offsetX: -0.1, radii: [0.053, 0.047, 0.039] },
+    { offsetX: 0.1, radii: [0.05, 0.044, 0.037] },
+    { offsetX: 0.3, radii: [0.043, 0.038, 0.032] },
+  ];
+
+  for (const spec of fingerSpecs) {
+    const segments = [];
+    for (let index = 0; index < 3; index++) {
+      const top = index === 2 ? spec.radii[2] * 0.8 : spec.radii[index + 1];
+      const geometry = new THREE.CylinderGeometry(top, spec.radii[index], 1, 10);
+      const mesh = new THREE.Mesh(geometry, mats.skin);
+      mesh.castShadow = true;
+      handGroup.add(mesh);
+      segments.push(mesh);
+    }
+
+    const joints = [];
+    const jointRadii = [spec.radii[0] * 1.18, spec.radii[1] * 1.08, spec.radii[2] * 1.02];
+    for (const radius of jointRadii) {
+      const mesh = new THREE.Mesh(sphereGeometry, mats.skin);
+      mesh.scale.setScalar(radius);
+      mesh.castShadow = true;
+      handGroup.add(mesh);
+      joints.push(mesh);
+    }
+
+    const creases = [];
+    for (const index of [1, 2]) {
+      const crease = new THREE.Mesh(
+        new THREE.TorusGeometry(jointRadii[index] * 0.98, 0.0035, 6, 16),
+        mats.skinShade,
+      );
+      handGroup.add(crease);
+      creases.push(crease);
+    }
+
+    const tipMesh = new THREE.Mesh(sphereGeometry, mats.skin);
+    tipMesh.scale.setScalar(spec.radii[2]);
+    tipMesh.castShadow = true;
+    handGroup.add(tipMesh);
+
+    const nail = new THREE.Mesh(sphereGeometry, mats.nail);
+    nail.scale.set(spec.radii[2] * 0.85, spec.radii[2] * 0.26, spec.radii[2] * 0.68);
+    handGroup.add(nail);
+
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.006, 8, 18), mats.glow);
+    ring.rotation.x = Math.PI / 2;
+    ring.visible = false;
+    handGroup.add(ring);
+
+    hand.fingers.push({
+      offsetX: spec.offsetX,
+      segments,
+      joints,
+      creases,
+      tipMesh,
+      nail,
+      ring,
+      tip: new THREE.Vector3(),
+      ready: false,
+      noteKey: '',
+      lift: 0,
+    });
+  }
+
+  handView = {
+    renderer, scene, camera, neck, hand, host,
+    palmGroup, handGroup,
+    mats,
+    info: $('handinfo'),
+    last: performance.now(),
+  };
+
+  buildHandNeck(instrument);
+  resizeHand();
+  if (window.ResizeObserver) new ResizeObserver(resizeHand).observe(host);
+  else window.addEventListener('resize', resizeHand);
+  requestAnimationFrame(renderHand);
+}
+
+(async () => {
+  updateLoopInfo();
+  updateSourceButtons();
+  draw();
+  initHand();
+  try {
+    const tracks = await refreshTracks();
+    const latest = tracks.find((t) => t.ready);
+    if (latest) loadTrack(latest.id);
+  } catch {
+    setStatus('Server is not responding. Start it with: python server.py');
+  }
+})();
+</script>
+</body>
+</html>

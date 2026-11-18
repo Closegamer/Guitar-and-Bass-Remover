@@ -1,0 +1,10 @@
+demucs>=4.1
+# basic-pitch 0.4.0 pins tensorflow<2.15.1 for Python >=3.11, which has no 3.12 wheel.
+# Install it without its pins, ONNX runtime is used on Windows:
+#   pip install --no-deps basic-pitch
+librosa
+pretty-midi
+mir-eval
+resampy>=0.4.3
+scikit-learn
+soundfile

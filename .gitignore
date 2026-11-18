@@ -1,0 +1,5 @@
+tracks/
+build/
+dist/
+__pycache__/
+*.log
