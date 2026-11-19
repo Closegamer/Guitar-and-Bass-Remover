@@ -63,6 +63,19 @@ Type: dirifempty; Name: "{localappdata}\GuitarAndBassAISmartRemover"
 Type: filesandordirs; Name: "{app}"
 
 [Code]
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+begin
+  { Stop the app's own server before Restart Manager tries to close pythonw.exe,
+    which it cannot do because pythonw has no window to close. }
+  Result := '';
+  if FileExists(ExpandConstant('{app}\stop.py')) then
+    Exec(ExpandConstant('{app}\python\pythonw.exe'),
+      '"' + ExpandConstant('{app}\stop.py') + '" --silent',
+      '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
 procedure InitializeWizard;
 begin
   WizardForm.WelcomeLabel2.Caption :=
