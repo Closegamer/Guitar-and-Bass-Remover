@@ -17,15 +17,13 @@ New-Item -ItemType Directory -Force $staging, (Join-Path $staging 'app'), (Join-
 New-Item -ItemType Directory -Force $dist | Out-Null
 
 Write-Host "Copying the Python runtime from $pythonHome ..."
-robocopy $pythonHome (Join-Path $staging 'python') /E /NFL /NDL /NJH /NJS /NP /R:1 /W:1 /XD __pycache__ .pytest_cache .mypy_cache .ruff_cache | Out-Null
+robocopy $pythonHome (Join-Path $staging 'python') /E /NFL /NDL /NJH /NJS /NP /R:1 /W:1 /XD __pycache__ .pytest_cache .mypy_cache .ruff_cache site-packages | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
 
-$userSite = (& python -c "import site; print(site.getusersitepackages())").Trim()
-if (Test-Path $userSite) {
-    Write-Host "Copying user site-packages from $userSite ..."
-    robocopy $userSite (Join-Path $staging 'python\Lib\site-packages') /E /NFL /NDL /NJH /NJS /NP /R:1 /W:1 /XD __pycache__ | Out-Null
-    if ($LASTEXITCODE -ge 8) { throw "user site-packages copy failed with exit code $LASTEXITCODE" }
-}
+Write-Host 'Staging only the packages the app uses ...'
+New-Item -ItemType Directory -Force (Join-Path $staging 'python\Lib\site-packages') | Out-Null
+& python (Join-Path $PSScriptRoot 'stage_packages.py') (Join-Path $staging 'python\Lib\site-packages')
+if ($LASTEXITCODE -ne 0) { throw "stage_packages.py failed with exit code $LASTEXITCODE" }
 
 Write-Host 'Copying the app ...'
 Copy-Item (Join-Path $project 'server.py'), (Join-Path $project 'index.html') -Destination (Join-Path $staging 'app') -Force
