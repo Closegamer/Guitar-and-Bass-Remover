@@ -11,6 +11,10 @@ A Windows app that removes the guitar or bass from a song locally, shows a playa
 
 The full project source is also available as a ZIP from [Code > Download ZIP](https://github.com/Closegamer/Guitar-and-Bass-Remover/archive/refs/heads/main.zip). The ZIP contains the source and build scripts; the ready installer is in Releases.
 
+### Why is the download so large?
+
+The setup is about 2 GB because it is fully self-contained. It bundles the Python runtime, CUDA-enabled PyTorch, the Demucs 6-stem separation model, Basic Pitch, and every other dependency. The app does not download models or call any cloud service, so it works offline after install and needs no account or API key.
+
 ## How to use
 
 1. Choose **Guitar** or **Bass** in the header, then load an audio file (MP3, WAV, FLAC, M4A, OGG).
@@ -45,6 +49,10 @@ Windows-приложение, которое локально убирает г�
 4. Если Windows SmartScreen показывает предупреждение, нажмите **Подробнее**, затем **Выполнить в любом случае**. Сборка не подписана.
 
 Полный исходный код проекта можно скачать архивом: [Code > Download ZIP](https://github.com/Closegamer/Guitar-and-Bass-Remover/archive/refs/heads/main.zip). В архиве исходники и скрипты сборки, готовый установщик лежит в Releases.
+
+### Почему установщик такой большой?
+
+Установщик весит около 2 ГБ, потому что он полностью автономный. Внутри среда Python, PyTorch с поддержкой CUDA, модель разделения Demucs на 6 дорожек, Basic Pitch и все остальные зависимости. Приложение не скачивает модели и не обращается к облачным сервисам, поэтому после установки работает офлайн, без аккаунта и API-ключей.
 
 ### Как пользоваться
 
