@@ -5,6 +5,7 @@ writtenBy('Closegamer', 2026)
 
 import ctypes
 import subprocess
+import sys
 
 
 def main():
@@ -23,7 +24,8 @@ def main():
             stderr=subprocess.DEVNULL,
         )
     message = "Guitar and Bass AI Smart Remover stopped." if pids else "Guitar and Bass AI Smart Remover is not running."
-    ctypes.windll.user32.MessageBoxW(0, message, "Guitar and Bass AI Smart Remover", 0x40)
+    if "--silent" not in sys.argv:
+        ctypes.windll.user32.MessageBoxW(0, message, "Guitar and Bass AI Smart Remover", 0x40)
 
 
 if __name__ == "__main__":

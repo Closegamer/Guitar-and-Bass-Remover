@@ -208,7 +208,7 @@
       <option value="6">6 strings</option>
     </select>
     <label class="btn accent">Load song<input id="file" type="file" accept="audio/*" hidden></label>
-    <button id="clean" class="btn" type="button">Clean harness</button>
+    <button id="clean" class="btn" type="button">Clear saved songs</button>
   </div>
 </header>
 
@@ -1110,7 +1110,7 @@ $('clean').addEventListener('click', async () => {
     if (!res.ok) throw new Error(data.error || res.statusText);
     location.reload();
   } catch (err) {
-    setStatus('Could not clean the harness: ' + err.message);
+    setStatus('Could not clear the saved songs: ' + err.message);
   }
 });
 

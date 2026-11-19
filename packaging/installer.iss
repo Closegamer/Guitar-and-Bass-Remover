@@ -52,6 +52,16 @@ Name: "{autodesktop}\Guitar and Bass AI Smart Remover"; Filename: "{app}\python\
 [Run]
 Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\launcher.py"""; Description: "Launch Guitar and Bass AI Smart Remover"; Flags: nowait postinstall skipifsilent
 
+[UninstallRun]
+Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\stop.py"" --silent"; Flags: runhidden waituntilterminated; RunOnceId: "StopServer"
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{localappdata}\GuitarAndBassAISmartRemover\tracks"
+Type: filesandordirs; Name: "{localappdata}\GuitarAndBassAISmartRemover\models"
+Type: files; Name: "{localappdata}\GuitarAndBassAISmartRemover\server.log"
+Type: dirifempty; Name: "{localappdata}\GuitarAndBassAISmartRemover"
+Type: filesandordirs; Name: "{app}"
+
 [Code]
 procedure InitializeWizard;
 begin

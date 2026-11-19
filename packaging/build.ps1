@@ -37,7 +37,7 @@ Write-Host 'Staging the separation model ...'
 if ($LASTEXITCODE -ne 0) { throw "stage_models.py failed with exit code $LASTEXITCODE" }
 
 Write-Host 'Checking the staged Python imports ...'
-& (Join-Path $staging 'python\python.exe') -c "import yaml, torch, torchaudio, demucs, demucs.hf, basic_pitch, librosa, soundfile, onnxruntime; print('staged imports ok')"
+& (Join-Path $staging 'python\python.exe') -c "import yaml, torch, torchaudio, demucs, demucs.hf, basic_pitch, librosa, soundfile, onnxruntime, lameenc; print('staged imports ok')"
 if ($LASTEXITCODE -ne 0) { throw "staged import check failed with exit code $LASTEXITCODE" }
 
 Write-Host 'Building the installer ...'
