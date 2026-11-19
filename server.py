@@ -31,8 +31,8 @@ AUDIO_MIME = {
 MAX_UPLOAD = 300 * 1024 * 1024
 MAX_FRET = 19
 INSTRUMENTS = {
-    "guitar": {"stem": "guitar.wav", "tab": "tab.json", "open": (40, 45, 50, 55, 59, 64)},
-    "bass": {"stem": "bass.wav", "tab": "bass_tab.json", "open": (28, 33, 38, 43)},
+    "guitar": {"stem": "guitar.mp3", "tab": "tab.json", "open": (40, 45, 50, 55, 59, 64)},
+    "bass": {"stem": "bass.mp3", "tab": "bass_tab.json", "open": (28, 33, 38, 43)},
 }
 
 jobs = {}
@@ -297,7 +297,7 @@ def prepare_worker():
         job.update(status="running", stage=f"stem-{instrument}", started=time.time())
         work_dir = folder / f"demucs-{instrument}"
         try:
-            backing = folder / f"no_{instrument}.wav"
+            backing = folder / f"no_{instrument}.mp3"
             if not (folder / config["stem"]).exists() or not backing.exists():
                 original = next(folder.glob("original.*"), None)
                 if original is None:
@@ -307,14 +307,14 @@ def prepare_worker():
                 try:
                     result = subprocess.run(
                         [sys.executable, "-m", "demucs.separate", "-n", MODEL,
-                         "--two-stems", instrument,
+                         "--two-stems", instrument, "--mp3",
                          "-o", str(work_dir), str(original)],
                         stdout=log, stderr=subprocess.STDOUT,
                     )
                 finally:
                     log.close()
                 stem = next((work_dir / MODEL).glob(f"*/{config['stem']}"), None)
-                no_stem = next((work_dir / MODEL).glob(f"*/no_{instrument}.wav"), None)
+                no_stem = next((work_dir / MODEL).glob(f"*/no_{instrument}.mp3"), None)
                 if result.returncode != 0 or stem is None or no_stem is None:
                     detail = last_log_line(log_path)
                     raise RuntimeError(detail or f"demucs exited with code {result.returncode}")
@@ -368,11 +368,11 @@ class Handler(BaseHTTPRequestHandler):
         if match:
             status = track_status(match.group(1))
             return self.send_json(status, 200 if status else 404)
-        match = re.fullmatch(r"/media/([0-9a-f]{8})/(guitar|bass|no_guitar|no_bass)\.wav", path)
+        match = re.fullmatch(r"/media/([0-9a-f]{8})/(guitar|bass|no_guitar|no_bass)\.mp3", path)
         if match:
-            file = TRACKS / match.group(1) / f"{match.group(2)}.wav"
+            file = TRACKS / match.group(1) / f"{match.group(2)}.mp3"
             if file.is_file():
-                return self.send_file(file, "audio/wav")
+                return self.send_file(file, "audio/mpeg")
         match = re.fullmatch(r"/media/([0-9a-f]{8})/(tab|bass_tab)\.json", path)
         if match:
             file = TRACKS / match.group(1) / f"{match.group(2)}.json"
@@ -411,7 +411,7 @@ class Handler(BaseHTTPRequestHandler):
             config = INSTRUMENTS[instrument]
             if ((folder / config["stem"]).exists()
                     and (folder / config["tab"]).exists()
-                    and (folder / f"no_{instrument}.wav").exists()):
+                    and (folder / f"no_{instrument}.mp3").exists()):
                 return self.send_json({"status": "done"})
             key = (track_id, instrument)
             if key in preparing:

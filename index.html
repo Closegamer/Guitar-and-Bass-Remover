@@ -224,6 +224,7 @@
     <button id="srcBacking" disabled>No guitar</button>
     <button id="srcStem" class="on">Guitar only</button>
   </div>
+  <button id="save" class="btn" type="button" disabled>Save no guitar</button>
   <div class="speed">
     <span>Speed <b id="speedval" class="mono">1.00×</b></span>
     <input id="speed" type="range" min="30" max="100" step="5" value="100" aria-label="Playback speed">
@@ -301,9 +302,9 @@ let backingTrackId = null;
 let backingInstrument = null;
 let backingAvailable = false;
 let source = 'stem';
-const STEMS = { guitar: 'guitar.wav', bass: 'bass.wav' };
+const STEMS = { guitar: 'guitar.mp3', bass: 'bass.mp3' };
 const TABS = { guitar: 'tab.json', bass: 'bass_tab.json' };
-const BACKINGS = { guitar: 'no_guitar.wav', bass: 'no_bass.wav' };
+const BACKINGS = { guitar: 'no_guitar.mp3', bass: 'no_bass.mp3' };
 
 const fmt = (t) => {
   t = Math.max(0, t || 0);
@@ -704,7 +705,7 @@ async function loadStem(id, inst, at, wasPlaying) {
     }
     const buffer = await res.arrayBuffer();
     if (token !== loadToken) return;
-    const blobUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+    const blobUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/mpeg' }));
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = blobUrl;
     await new Promise((resolve, reject) => {
@@ -752,6 +753,8 @@ function updateSourceButtons() {
   $('srcBacking').textContent = instrument === 'bass' ? 'No bass' : 'No guitar';
   $('srcBacking').classList.toggle('on', source === 'backing');
   $('srcBacking').disabled = !backingAvailable;
+  $('save').textContent = instrument === 'bass' ? 'Save no bass' : 'Save no guitar';
+  $('save').disabled = !backingAvailable;
   $('srcMix').classList.toggle('on', source === 'mix');
   $('srcMix').disabled = !mixAvailable;
   $('bassStrings').hidden = instrument !== 'bass';
@@ -807,7 +810,7 @@ async function loadBacking(id, inst) {
     if (!res.ok) return;
     const buffer = await res.arrayBuffer();
     if (trackId !== id || instrument !== inst) return;
-    const blobUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+    const blobUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/mpeg' }));
     if (backingUrl) URL.revokeObjectURL(backingUrl);
     backingUrl = blobUrl;
     backingTrackId = id;
@@ -1061,6 +1064,16 @@ $('play').addEventListener('click', togglePlay);
 $('srcStem').addEventListener('click', () => setSource('stem'));
 $('srcBacking').addEventListener('click', () => setSource('backing'));
 $('srcMix').addEventListener('click', () => setSource('mix'));
+$('save').addEventListener('click', () => {
+  if (!backingUrl) return;
+  const name = trackName(trackId).replace(/\.[^.]+$/, '');
+  const link = document.createElement('a');
+  link.href = backingUrl;
+  link.download = `${name} - no ${instrument}.mp3`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+});
 mixCanvas.addEventListener('pointerdown', (e) => {
   if (!duration) return;
   const rect = mixCanvas.getBoundingClientRect();

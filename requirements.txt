@@ -1,4 +1,5 @@
 demucs>=4.1
+lameenc  # demucs --mp3 encoder
 # basic-pitch 0.4.0 pins tensorflow<2.15.1 for Python >=3.11, which has no 3.12 wheel.
 # Install it without its pins, ONNX runtime is used on Windows:
 #   pip install --no-deps basic-pitch
