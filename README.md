@@ -67,3 +67,8 @@ powershell -ExecutionPolicy Bypass -File packaging\build.ps1
 ```
 
 Установщик появится в `dist\GuitarAndBassAISmartRemoverSetup.exe`. Для разработки запустите `python server.py` и откройте http://127.0.0.1:8765. Видеокарта CUDA не обязательна, но с ней разделение работает намного быстрее.
+
+---
+
+writtenBy('Closegamer', 2026)
+
