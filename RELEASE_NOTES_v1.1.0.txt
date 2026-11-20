@@ -1,5 +1,9 @@
 Guitar and Bass AI Smart Remover 1.1.0
 
+A Windows practice tool for guitar and bass on real songs you want to learn.
+It removes your instrument locally, shows playable tabs with a 3D fretting
+hand, and lets you loop and slow down any part.
+
 New in this release
 
 1. English and Russian interface
