@@ -1,6 +1,6 @@
 # Guitar and Bass AI Smart Remover
 
-A Windows app that removes the guitar or bass from a song locally, shows a playable tab with a 3D fretting hand, and lets you loop and slow down any part. Separation runs offline with Demucs and Basic Pitch, and the included models need no account or key. You can optionally connect Claude, DeepSeek or another OpenAI-compatible LLM to refine the tab; it never receives the song. Generated tracks are MP3, with a Save button for the version with the instrument removed.
+A Windows app for practicing guitar and bass on real songs you want to learn. Load a song you want to learn, cut out your instrument locally, follow the playable tab with a 3D fretting hand, and loop or slow down any part. Separation runs offline with Demucs and Basic Pitch, and the included models need no account or key. You can optionally connect Claude, DeepSeek or another OpenAI-compatible LLM to refine the tab; it never receives the song. Generated tracks are MP3, with a Save button for the version with the instrument removed.
 
 ## Install on Windows
 
@@ -39,7 +39,7 @@ The setup is written to `dist\GuitarAndBassAISmartRemoverSetup.exe`. For develop
 
 ## Русский
 
-Windows-приложение, которое локально убирает гитару или бас из песни, показывает табулатуру и 3D-постановку руки, позволяет зацикливать и замедлять любой фрагмент. Разделение работает офлайн на Demucs и Basic Pitch, встроенные модели не требуют аккаунта и ключей. При желании можно подключить Claude, DeepSeek или другую OpenAI-совместимую LLM для уточнения табов; песня ей не отправляется. Готовые треки сохраняются в MP3, а кнопка Save скачивает версию без выбранного инструмента.
+Windows-приложение для занятий на гитаре и басе по реальным песням, которые вы хотите выучить. Загрузите песню, локально уберите свой инструмент, следите за табулатурой и 3D-постановкой руки, зацикливайте и замедляйте любой фрагмент. Разделение работает офлайн на Demucs и Basic Pitch, встроенные модели не требуют аккаунта и ключей. При желании можно подключить Claude, DeepSeek или другую OpenAI-совместимую LLM для уточнения табов; песня ей не отправляется. Готовые треки сохраняются в MP3, а кнопка Save скачивает версию без выбранного инструмента.
 
 ### Установка
 
