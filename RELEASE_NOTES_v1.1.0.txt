@@ -1,0 +1,55 @@
+Guitar and Bass AI Smart Remover 1.1.0
+
+New in this release
+
+1. English and Russian interface
+   A language switch in the header changes the whole app: menus, buttons,
+   hints, status messages, dialogs and common server errors. The choice is
+   remembered and follows the browser language on the first visit.
+
+2. AI model choice for the tab
+   Models now has three options: Included models, Claude (Anthropic API key)
+   and any OpenAI-compatible API such as DeepSeek, OpenAI, OpenRouter, Groq,
+   Mistral, LM Studio or Ollama. The cloud and local options have an endpoint,
+   a model ID and an API key field.
+   Chat models only re-finger the visible tab window when you press
+   Improve with AI. They never receive the song, and they cannot cut or
+   improve the audio. Separation always stays on Demucs on this computer.
+
+3. Automatic metronome tempo
+   The metronome is off by default and can be switched on at any time. It
+   detects the song tempo and every beat, follows tempo changes, works with
+   slowed playback and is cached per song. The click grid is aligned to the
+   selected source, including the small MP3 offset between the original and
+   Demucs stems, so changing Full mix, No guitar or Guitar only no longer
+   shifts the beat.
+
+4. Re-cut with another separation model
+   Models now has a Separation model section. Choose Guitar or Bass, an
+   installed Demucs model, and Fast, Balanced or Best quality. Best runs more
+   passes for a cleaner cut. The app replaces that stem, its play-along mix
+   and its tab. htdemucs_6s remains the only Demucs model with a guitar stem.
+
+5. Hand visibility
+   The Hand panel has a Hide hand / Show hand button. The choice is
+   remembered, and the 3D renderer stops drawing while the hand is hidden.
+
+6. Smoother playback
+   The full mix and the No guitar / No bass backing now load only when you
+   select them or press Save, instead of being decoded during initial
+   playback. Waveform and tab drawing is capped at 30 fps, and the 3D hand
+   renders at 30 fps. These changes remove the small playback interruptions
+   caused by background decoding and rendering.
+
+7. Safer settings
+   API keys are stored locally in settings.json, are never returned to the
+   browser, are ignored by Git, and are removed by the uninstaller.
+
+Installer details
+
+Version 1.1.0. Per-user install under LocalAppData. The setup is about 2 GB
+and still bundles the Python runtime, CUDA PyTorch, Basic Pitch, the Demucs
+model and the included offline models. The app works offline with the included
+models. A cloud AI connection is optional and only used for tab help.
+
+writtenBy('Closegamer', 2026)

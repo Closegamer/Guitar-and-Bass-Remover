@@ -3,6 +3,7 @@ build/
 dist/
 __pycache__/
 *.log
+settings.json
 MEMORY.md
 continue_session.md
 plans/

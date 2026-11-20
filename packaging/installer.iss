@@ -1,5 +1,5 @@
 #define MyAppName "Guitar and Bass AI Smart Remover"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Closegamer"
 #define MyAppCopyright "writtenBy('Closegamer', 2026)"
 #define MyAppExeName "pythonw.exe"
@@ -32,7 +32,7 @@ VersionInfoDescription={#MyAppName}
 VersionInfoCopyright={#MyAppCopyright}
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
-VersionInfoVersion=1.0.0.0
+VersionInfoVersion=1.1.0.0
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -58,6 +58,7 @@ Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\stop.py"" --silent"; 
 [UninstallDelete]
 Type: filesandordirs; Name: "{localappdata}\GuitarAndBassAISmartRemover\tracks"
 Type: filesandordirs; Name: "{localappdata}\GuitarAndBassAISmartRemover\models"
+Type: files; Name: "{localappdata}\GuitarAndBassAISmartRemover\settings.json"
 Type: files; Name: "{localappdata}\GuitarAndBassAISmartRemover\server.log"
 Type: dirifempty; Name: "{localappdata}\GuitarAndBassAISmartRemover"
 Type: filesandordirs; Name: "{app}"

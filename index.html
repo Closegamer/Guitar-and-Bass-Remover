@@ -16,6 +16,7 @@
     --teal: #5eead4;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     margin: 0;
     min-height: 100vh;
@@ -157,6 +158,8 @@
     border-radius: 12px;
   }
   #handinfo { margin-left: auto; color: var(--muted); }
+  #handtoggle { padding: 3px 10px; font-size: 12px; }
+  #lang { width: 70px; min-width: 70px; }
   .stringlegend { color: var(--muted); letter-spacing: .12em; }
   .stringlegend b { color: var(--amber); }
   #handcanvas {
@@ -171,6 +174,49 @@
     .workspace { grid-template-columns: 1fr; }
   }
   .hint { margin: 12px 0 0; color: #626a7d; font-size: 13px; }
+  .metro { display: flex; align-items: center; gap: 8px; }
+  .metro span { color: var(--muted); font-size: 13px; }
+  .metro input {
+    width: 68px;
+    padding: 7px 8px;
+    color: var(--text);
+    background: #11141c;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-align: center;
+  }
+  .metro .btn.on { color: #1a1206; background: var(--amber); border-color: var(--amber); font-weight: 650; }
+  #aitab { padding: 4px 10px; font-size: 12px; }
+  dialog {
+    width: min(620px, calc(100vw - 32px));
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+    padding: 20px 22px;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  dialog::backdrop { background: rgba(5, 6, 10, .72); }
+  dialog h2 { margin: 0 0 4px; font-size: 16px; }
+  dialog h2:not(:first-child) { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .fields { display: grid; gap: 10px; margin: 12px 0; }
+  .fields label { display: grid; gap: 4px; color: var(--muted); font-size: 13px; }
+  .fields input, .fields select {
+    width: 100%;
+    max-width: none;
+    padding: 8px 10px;
+    color: var(--text);
+    background: #11141c;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .fieldrow { display: flex; gap: 10px; flex-wrap: wrap; }
+  .fieldrow > label { flex: 1 1 180px; }
+  .check { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; }
+  .check input { width: auto; }
+  #modelstatus { min-height: 1.4em; margin: 10px 0; color: var(--amber); font-size: 13px; }
+  .modelfoot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
   footer {
     margin: 22px 0 4px;
     padding-top: 10px;
@@ -195,69 +241,137 @@
 </head>
 <body>
 <header>
-  <h1>Guitar and Bass AI Smart <span>Remover</span></h1>
+  <h1 data-i18n-html="appTitleHtml">Guitar and Bass AI Smart <span>Remover</span></h1>
   <div class="load">
-    <select id="tracks" aria-label="Saved songs"><option value="">— saved songs —</option></select>
-    <select id="instrument" aria-label="Instrument">
-      <option value="guitar">Guitar</option>
-      <option value="bass">Bass</option>
+    <select id="tracks" aria-label="Saved songs" data-i18n-aria="savedSongsAria"><option value="" data-i18n="savedSongs">— saved songs —</option></select>
+    <select id="instrument" aria-label="Instrument" data-i18n-aria="instrumentAria">
+      <option value="guitar" data-i18n="guitar">Guitar</option>
+      <option value="bass" data-i18n="bass">Bass</option>
     </select>
-    <select id="bassStrings" aria-label="Bass strings" hidden>
-      <option value="4">4 strings</option>
-      <option value="5">5 strings</option>
-      <option value="6">6 strings</option>
+    <select id="bassStrings" aria-label="Bass strings" data-i18n-aria="bassStringsAria" hidden>
+      <option value="4" data-i18n="strings4">4 strings</option>
+      <option value="5" data-i18n="strings5">5 strings</option>
+      <option value="6" data-i18n="strings6">6 strings</option>
     </select>
-    <label class="btn accent">Load song<input id="file" type="file" accept="audio/*" hidden></label>
-    <button id="clean" class="btn" type="button">Clear saved songs</button>
+    <label class="btn accent"><span data-i18n="loadSong">Load song</span><input id="file" type="file" accept="audio/*" hidden></label>
+    <select id="lang" aria-label="Language" data-i18n-aria="language">
+      <option value="en">EN</option>
+      <option value="ru">RU</option>
+    </select>
+    <button id="modelsbtn" class="btn" type="button" data-i18n="modelsBtn">Models</button>
+    <button id="clean" class="btn" type="button" data-i18n="clearSaved">Clear saved songs</button>
   </div>
 </header>
 
-<p id="status" aria-live="polite">Pick Guitar or Bass, then load a song — only that part is cut.</p>
-<canvas id="wave" height="240" aria-label="Guitar waveform timeline"></canvas>
-<canvas id="mixwave" height="88" aria-label="Full mix waveform"></canvas>
+<p id="status" aria-live="polite" data-i18n="statusIntro">Pick Guitar or Bass, then load a song: only that part is cut.</p>
+<canvas id="wave" height="240" aria-label="Guitar waveform timeline" data-i18n-aria="waveAria"></canvas>
+<canvas id="mixwave" height="88" aria-label="Full mix waveform" data-i18n-aria="mixAria"></canvas>
 
 <section class="transport">
   <button id="play" class="btn play" disabled>▶ Play</button>
   <span id="time" class="mono">0:00.0 / 0:00.0</span>
-  <div class="sources" role="group" aria-label="Listening source">
+  <div class="sources" role="group" aria-label="Listening source" data-i18n-aria="sourcesAria">
     <button id="srcMix" disabled>Full mix</button>
     <button id="srcBacking" disabled>No guitar</button>
     <button id="srcStem" class="on">Guitar only</button>
   </div>
   <button id="save" class="btn" type="button" disabled>Save no guitar</button>
   <div class="speed">
-    <span>Speed <b id="speedval" class="mono">1.00×</b></span>
-    <input id="speed" type="range" min="30" max="100" step="5" value="100" aria-label="Playback speed">
+    <span><span data-i18n="speed">Speed</span> <b id="speedval" class="mono">1.00×</b></span>
+    <input id="speed" type="range" min="30" max="100" step="5" value="100" aria-label="Playback speed" data-i18n-aria="speedAria">
+  </div>
+  <div class="metro">
+    <button id="metro" class="btn" type="button" aria-pressed="false" data-i18n="metronome">Metronome</button>
+    <input id="bpm" type="number" min="30" max="300" step="0.1" value="120" aria-label="Metronome beats per minute" data-i18n-aria="bpmAria">
+    <span data-i18n="bpm">BPM</span>
   </div>
   <strong id="loopinfo" class="mono">Drag to loop a part</strong>
-  <button id="clearloop" disabled>Clear loop</button>
+  <button id="clearloop" disabled data-i18n="clearLoop">Clear loop</button>
 </section>
 
 <div class="workspace">
   <section class="tabpanel">
     <div class="tabhead">
-      <strong>Tab</strong>
-      <span>auto · draft, trust your ear</span>
+      <strong data-i18n="tab">Tab</strong>
+      <span data-i18n="tabAuto">auto · draft, trust your ear</span>
+      <button id="aitab" class="btn" type="button" disabled>Improve with AI</button>
       <span id="tabrange" class="mono"></span>
     </div>
-    <canvas id="tab" height="170" aria-label="Guitar tab"></canvas>
+    <canvas id="tab" height="170" aria-label="Guitar tab" data-i18n-aria="tabAria"></canvas>
   </section>
   <section class="handpanel">
     <div class="tabhead">
-      <strong>Hand</strong>
-      <span>3D · follows the tab</span>
+      <strong data-i18n="hand">Hand</strong>
+      <span data-i18n="hand3d">3D · follows the tab</span>
       <span id="handstrings" class="stringlegend">e B G D A <b>E</b> ↓</span>
+      <button id="handtoggle" class="btn" type="button" aria-pressed="true">Hide hand</button>
       <span id="handinfo" class="mono"></span>
     </div>
-    <div id="handcanvas" role="img" aria-label="3D fretting hand on the neck"></div>
+    <div id="handcanvas" role="img" aria-label="3D fretting hand on the neck" data-i18n-aria="handAria"></div>
   </section>
 </div>
-<p class="hint">Space = play/pause · ←/→ = 3 s · drag on the waveform = loop a part · double-click = clear loop · tab follows the loop · Full mix / No guitar / Guitar only</p>
-<p class="hint">Tab signs: / slide up · \ slide down · ~ vibrato · ↑↓ bend/whammy · zigzag = tremolo picking</p>
+<p class="hint" data-i18n="hintKeys">Space = play/pause · ←/→ = 3 s · drag on the waveform = loop a part · double-click = clear loop · tab follows the loop · Full mix / No guitar / Guitar only</p>
+<p class="hint" data-i18n="hintSigns">Tab signs: / slide up · \ slide down · ~ vibrato · ↑↓ bend/whammy · zigzag = tremolo picking</p>
 
 <footer>writtenBy('Closegamer', 2026)</footer>
 
-<div id="drop">Drop an audio file</div>
+<div id="drop" data-i18n="drop">Drop an audio file</div>
+
+<dialog id="modelsdialog">
+  <h2 data-i18n="modelsTitle">AI model for the tab</h2>
+  <p class="hint" data-i18n-html="modelsWarn"><b>Chat models do not process audio.</b> DeepSeek, Claude and local LLMs only choose tab fingerings. They cannot cut or improve the guitar or bass track, and they never receive the song.</p>
+  <p class="hint" data-i18n="modelsIntro">Cutting the instrument and writing the first tab always run on this PC with the audio model Demucs. The chosen AI only refines the visible part of the tab when you press Improve with AI; nothing is sent otherwise.</p>
+  <div class="fields">
+    <label><span data-i18n="useForTab">Use for tab only</span>
+      <select id="aiProvider">
+        <option value="included" data-i18n="providerIncluded">Included models (offline)</option>
+        <option value="claude" data-i18n="providerClaude">Claude (Anthropic API key)</option>
+        <option value="local" data-i18n="providerOpenAI">Any OpenAI-compatible API (cloud or local)</option>
+      </select>
+    </label>
+    <div id="claudeFields" class="fields" hidden>
+      <label><span data-i18n="apiKey">API key</span> <input id="claudeKey" type="password" autocomplete="off" placeholder="Anthropic API key" data-i18n-placeholder="claudeKeyPlaceholder"></label>
+      <label><span data-i18n="model">Model</span> <input id="claudeModel" placeholder="claude-sonnet-4-5"></label>
+      <label class="check"><input id="claudeClear" type="checkbox"> <span data-i18n="removeKey">Remove the saved key</span></label>
+    </div>
+    <div id="localFields" class="fields" hidden>
+      <label><span data-i18n="endpoint">Endpoint (base URL or full chat URL)</span> <input id="localUrl" placeholder="http://127.0.0.1:11434"></label>
+      <label><span data-i18n="modelApiId">Model (API ID)</span> <input id="localModel" list="localList" placeholder="e.g. deepseek-flash" data-i18n-placeholder="modelPlaceholder"><datalist id="localList"></datalist></label>
+      <label><span data-i18n="apiKey">API key</span> <input id="localKey" type="password" autocomplete="off" placeholder="empty for Ollama on this PC" data-i18n-placeholder="localKeyPlaceholder"></label>
+      <label class="check"><input id="localClear" type="checkbox"> <span data-i18n="removeKey">Remove the saved key</span></label>
+    </div>
+  </div>
+  <p class="hint" data-i18n-html="modelsHint">A Claude chat subscription does not include API access; Claude needs an Anthropic API key. The last option works with any OpenAI-compatible API, local or cloud: Ollama, LM Studio, DeepSeek, OpenAI, OpenRouter, Groq, Mistral. Paste a base URL such as <b>https://api.deepseek.com</b>, <b>https://api.openai.com</b> or <b>https://openrouter.ai/api/v1</b>, or a full <b>/chat/completions</b> URL. Use the model ID from the provider, not its display name; cloud APIs need the key from that provider.</p>
+  <p id="modelstatus" aria-live="polite"></p>
+  <div class="modelfoot">
+    <button id="testmodel" class="btn" type="button" data-i18n="testConnection">Test connection</button>
+    <button id="savemodels" class="btn accent" type="button" data-i18n="save">Save</button>
+    <button id="closemodels" class="btn" type="button" data-i18n="close">Close</button>
+  </div>
+
+  <h2 data-i18n="separationTitle">Separation model</h2>
+  <p class="hint" data-i18n-html="separationHint"><b>Only an audio separation model can cut a stem.</b> Cloud chat models such as DeepSeek or Claude cannot do this. The list shows Demucs models installed on this computer. htdemucs_6s is the included default and the only one with a guitar stem.</p>
+  <div class="fields">
+    <div class="fieldrow">
+      <label><span data-i18n="recutInstrument">Instrument</span>
+        <select id="recutInstrument">
+          <option value="guitar" data-i18n="guitar">Guitar</option>
+          <option value="bass" data-i18n="bass">Bass</option>
+        </select>
+      </label>
+      <label><span data-i18n="model">Model</span> <select id="sepModel"></select></label>
+      <label><span data-i18n="quality">Quality</span>
+        <select id="sepQuality">
+          <option value="fast" data-i18n="qualityFast">Fast</option>
+          <option value="balanced" selected data-i18n="qualityBalanced">Balanced</option>
+          <option value="best" data-i18n="qualityBest">Best (slow)</option>
+        </select>
+      </label>
+    </div>
+    <label><span data-i18n="otherModel">Other Demucs model name</span> <input id="sepCustom" placeholder="e.g. htdemucs_ft" data-i18n-placeholder="otherModelPlaceholder"></label>
+    <button id="recut" class="btn" type="button" data-i18n="cutAgain">Cut again</button>
+  </div>
+</dialog>
 
 <script src="/vendor/three.min.js"></script>
 <script>
@@ -274,17 +388,408 @@ audio.preload = 'auto';
 audio.preservesPitch = true;
 audio.webkitPreservesPitch = true;
 
+const I18N = {
+  en: {
+    appTitle: 'Guitar and Bass AI Smart Remover',
+    appTitleHtml: 'Guitar and Bass AI Smart <span>Remover</span>',
+    language: 'Language',
+    savedSongsAria: 'Saved songs',
+    savedSongs: '— saved songs —',
+    instrumentAria: 'Instrument',
+    guitar: 'Guitar',
+    bass: 'Bass',
+    bassStringsAria: 'Bass strings',
+    strings4: '4 strings',
+    strings5: '5 strings',
+    strings6: '6 strings',
+    loadSong: 'Load song',
+    modelsBtn: 'Models',
+    clearSaved: 'Clear saved songs',
+    statusIntro: 'Pick Guitar or Bass, then load a song: only that part is cut.',
+    play: '▶ Play',
+    pause: '⏸ Pause',
+    fullMix: 'Full mix',
+    noGuitar: 'No guitar',
+    noBass: 'No bass',
+    guitarOnly: 'Guitar only',
+    bassOnly: 'Bass only',
+    saveNoGuitar: 'Save no guitar',
+    saveNoBass: 'Save no bass',
+    speed: 'Speed',
+    metronome: 'Metronome',
+    bpm: 'BPM',
+    dragLoop: 'Drag to loop a part',
+    clearLoop: 'Clear loop',
+    loopInfo: 'Loop {a} – {b} ({sec} s)',
+    loopSuffix: ' · loop',
+    sourcesAria: 'Listening source',
+    speedAria: 'Playback speed',
+    bpmAria: 'Metronome beats per minute',
+    waveAria: 'Guitar waveform timeline',
+    mixAria: 'Full mix waveform',
+    tabAria: 'Guitar tab',
+    handAria: '3D fretting hand on the neck',
+    tab: 'Tab',
+    tabAuto: 'auto · draft, trust your ear',
+    improveAI: 'Improve with AI',
+    useIncludedTab: 'Use included tab',
+    hand: 'Hand',
+    hand3d: '3D · follows the tab',
+    hideHand: 'Hide hand',
+    showHand: 'Show hand',
+    hintKeys: 'Space = play/pause · ←/→ = 3 s · drag on the waveform = loop a part · double-click = clear loop · tab follows the loop · Full mix / No guitar / Guitar only',
+    hintSigns: 'Tab signs: / slide up · \\ slide down · ~ vibrato · ↑↓ bend/whammy · zigzag = tremolo picking',
+    drop: 'Drop an audio file',
+    modelsTitle: 'AI model for the tab',
+    modelsWarn: '<b>Chat models do not process audio.</b> DeepSeek, Claude and local LLMs only choose tab fingerings. They cannot cut or improve the guitar or bass track, and they never receive the song.',
+    modelsIntro: 'Cutting the instrument and writing the first tab always run on this PC with the audio model Demucs. The chosen AI only refines the visible part of the tab when you press Improve with AI; nothing is sent otherwise.',
+    useForTab: 'Use for tab only',
+    providerIncluded: 'Included models (offline)',
+    providerClaude: 'Claude (Anthropic API key)',
+    providerOpenAI: 'Any OpenAI-compatible API (cloud or local)',
+    apiKey: 'API key',
+    claudeKeyPlaceholder: 'Anthropic API key',
+    model: 'Model',
+    removeKey: 'Remove the saved key',
+    endpoint: 'Endpoint (base URL or full chat URL)',
+    modelApiId: 'Model (API ID)',
+    modelPlaceholder: 'e.g. deepseek-flash',
+    localKeyPlaceholder: 'empty for Ollama on this PC',
+    modelsHint: 'A Claude chat subscription does not include API access; Claude needs an Anthropic API key. The last option works with any OpenAI-compatible API, local or cloud: Ollama, LM Studio, DeepSeek, OpenAI, OpenRouter, Groq, Mistral. Paste a base URL such as <b>https://api.deepseek.com</b>, <b>https://api.openai.com</b> or <b>https://openrouter.ai/api/v1</b>, or a full <b>/chat/completions</b> URL. Use the model ID from the provider, not its display name; cloud APIs need the key from that provider.',
+    testConnection: 'Test connection',
+    save: 'Save',
+    close: 'Close',
+    separationTitle: 'Separation model',
+    separationHint: '<b>Only an audio separation model can cut a stem.</b> Cloud chat models such as DeepSeek or Claude cannot do this. The list shows Demucs models installed on this computer. htdemucs_6s is the included default and the only one with a guitar stem.',
+    recutInstrument: 'Instrument',
+    quality: 'Quality',
+    qualityFast: 'Fast',
+    qualityBalanced: 'Balanced',
+    qualityBest: 'Best (slow)',
+    otherModel: 'Other Demucs model name',
+    otherModelPlaceholder: 'e.g. htdemucs_ft',
+    cutAgain: 'Cut again',
+    loadingInstrument: 'Loading the {inst}…',
+    couldNotLoad: 'Could not load the {inst}: {error}',
+    songTabBelow: '“{name}” — {inst} tab below; drag a loop to freeze a part.',
+    songWritingTab: '“{name}” — writing the {inst} tab…',
+    fullMixUnavailable: 'Full mix unavailable: {error}',
+    loadingFullMix: 'Loading the full mix…',
+    loadingNoGuitar: 'Loading the full track without guitar…',
+    loadingNoBass: 'Loading the full track without bass…',
+    pressPlaySource: 'Press Play to listen to this source.',
+    playingSource: 'Playing: {label}.',
+    playingNoGuitarQuiet: 'Playing the full track without guitar. This part is quiet: no other instruments here.',
+    playingNoBassQuiet: 'Playing the full track without bass. This part is quiet: no other instruments here.',
+    couldNotSwitch: 'Could not switch source: {error}',
+    cuttingFirstTime: 'Cutting the {inst} from the song: the first time can take a minute…',
+    couldNotStartCut: 'Could not start cutting the {inst}.',
+    couldNotCut: 'Could not cut the {inst}: {error}',
+    instReady: '“{name}” — {inst} is ready.',
+    writingTabStage: 'Writing the {inst} tab',
+    cuttingStage: 'Cutting the {inst}',
+    progress: '{title}… {seconds} s',
+    couldNotRequestTab: 'Could not request the {inst} tab.',
+    tabReady: '“{name}” — {inst} tab ready. Drag a loop to freeze a part.',
+    autoTabFailed: 'Auto {inst} tab failed: {error}',
+    unknownError: 'unknown error',
+    writingTab: 'Writing the {inst} tab… {seconds} s',
+    improveTitle: 'Sends the visible tab window, or the loop, to the chosen AI model for re-fingering',
+    chooseAiTitle: 'Choose Claude or a local LLM in Models first',
+    providerClaudeLabel: 'Claude',
+    providerApiLabel: 'your API model',
+    providerIncludedLabel: 'the included models',
+    checkingModels: 'Checking the models on this computer…',
+    couldNotReadSettings: 'Could not read the model settings: {error}',
+    keySaved: 'a key is saved; type a new one to replace it',
+    endpointAnswered: 'Model endpoint answered with {count} model(s).',
+    endpointNoAnswer: 'No model endpoint answered. Check the URL and key; the included models still work.',
+    modelsList: 'Models: {models}',
+    testingConnection: 'Testing the connection…',
+    connectionFailed: 'Connection failed: {error}',
+    saved: 'Saved. The included models keep working offline.',
+    couldNotSave: 'Could not save: {error}',
+    loadSongFirst: 'Load a song first.',
+    invalidModelName: 'Use a plain Demucs model name (letters, digits, dot, dash).',
+    recutConfirm: 'Cut the {inst} again with {model} ({quality})? The current {inst} stem and tab are replaced when it finishes.',
+    recutProgress: 'Cutting the {inst} with {model}… {seconds} s',
+    recutFailed: 'Cut again failed: {error}',
+    recutDone: '“{name}” — {inst} re-cut with {model} ({quality}).',
+    askingAI: 'Asking {provider} to re-finger the visible tab…',
+    aiTabChanged: 'AI tab: {count} note(s) re-fingered. “Use included tab” undoes it.',
+    aiTabNoChanges: 'AI tab: no changes were needed in this part.',
+    aiTabFailed: 'AI tab failed: {error}',
+    restoredIncluded: 'Restored the included tab.',
+    couldNotRestore: 'Could not restore the included tab: {error}',
+    tempoDetected: 'Detected from the song; edit to override',
+    metroDetected: 'Metronome at the detected {bpm} BPM',
+    tempoNotDetected: 'Tempo was not detected; type the song BPM',
+    bpmHint: 'Metronome follows the song tempo',
+    uploadCutting: 'Cutting the {inst} from “{name}”: the first run can take a few minutes…',
+    uploadFailed: 'Upload failed: {error}',
+    couldNotPrepare: 'Could not prepare the {inst}: {error}',
+    preparingSong: 'Preparing the song',
+    confirmClear: 'Delete every saved song and all generated stems, tabs and play-along mixes? This cannot be undone.',
+    couldNotClear: 'Could not clear the saved songs: {error}',
+    serverNotResponding: 'Server is not responding. Start it with: python server.py',
+    handLoadSong: 'load a song',
+    handPreparing: 'preparing…',
+    handFret: '{inst} · fret {frets}',
+    handOpen: '{inst} · open strings',
+    handRest: '{inst} · at rest',
+    hand3dMissing: '3D library missing',
+    webglUnavailable: 'WebGL unavailable',
+    browserCannotPlayAudio: 'the browser cannot play this audio file',
+    browserCannotPlaySource: 'the browser cannot play this source',
+    song: 'song',
+    guitarOnlyLabel: 'GUITAR ONLY',
+    bassOnlyLabel: 'BASS ONLY',
+    guitarPart: 'GUITAR PART',
+    bassPart: 'BASS PART',
+    noGuitarFull: 'NO GUITAR · FULL TRACK',
+    noBassFull: 'NO BASS · FULL TRACK',
+    fullMixLabel: 'FULL MIX',
+    mixLoading: 'Full mix loading…',
+    mixOnDemand: 'Full mix loads when selected',
+    noMix: 'No mix loaded',
+    loadSongForTab: 'Load a song to see its tab',
+    preparingTab: 'Preparing the {inst}…',
+    autoTabUnavailable: 'Auto tab unavailable for this song',
+    noNotes: 'No notes detected in this part',
+    downloadNoGuitar: '{name} - no guitar.mp3',
+    downloadNoBass: '{name} - no bass.mp3',
+    lowerFullMix: 'full mix',
+    lowerNoGuitar: 'full track without guitar',
+    lowerNoBass: 'full track without bass',
+    lowerStem: '{inst} only',
+    includedModel: '{model} (included)',
+  },
+  ru: {
+    appTitle: 'Умное удаление гитары и баса',
+    appTitleHtml: 'Умное удаление гитары и <span>баса</span>',
+    language: 'Язык',
+    savedSongsAria: 'Сохранённые песни',
+    savedSongs: '— сохранённые песни —',
+    instrumentAria: 'Инструмент',
+    guitar: 'Гитара',
+    bass: 'Бас',
+    bassStringsAria: 'Струны баса',
+    strings4: '4 струны',
+    strings5: '5 струн',
+    strings6: '6 струн',
+    loadSong: 'Загрузить песню',
+    modelsBtn: 'Модели',
+    clearSaved: 'Очистить песни',
+    statusIntro: 'Выберите гитару или бас, затем загрузите песню: вырезается только эта партия.',
+    play: '▶ Играть',
+    pause: '⏸ Пауза',
+    fullMix: 'Полный микс',
+    noGuitar: 'Без гитары',
+    noBass: 'Без баса',
+    guitarOnly: 'Только гитара',
+    bassOnly: 'Только бас',
+    saveNoGuitar: 'Сохранить без гитары',
+    saveNoBass: 'Сохранить без баса',
+    speed: 'Скорость',
+    metronome: 'Метроном',
+    bpm: 'BPM',
+    dragLoop: 'Протяните, чтобы зациклить',
+    clearLoop: 'Сбросить цикл',
+    loopInfo: 'Цикл {a} – {b} ({sec} с)',
+    loopSuffix: ' · цикл',
+    sourcesAria: 'Источник звука',
+    speedAria: 'Скорость воспроизведения',
+    bpmAria: 'Удары метронома в минуту',
+    waveAria: 'Волновая форма инструмента',
+    mixAria: 'Волновая форма полного микса',
+    tabAria: 'Табы',
+    handAria: '3D рука на грифе',
+    tab: 'Табы',
+    tabAuto: 'авто · черновик, доверьтесь слуху',
+    improveAI: 'Улучшить с AI',
+    useIncludedTab: 'Вернуть встроенные табы',
+    hand: 'Рука',
+    hand3d: '3D · следует табам',
+    hideHand: 'Скрыть руку',
+    showHand: 'Показать руку',
+    hintKeys: 'Пробел = играть/пауза · ←/→ = 3 с · протяните по волне = зациклить · двойной клик = сбросить цикл · табы следуют циклу · Полный микс / Без гитары / Только гитара',
+    hintSigns: 'Знаки табов: / слайд вверх · \\ слайд вниз · ~ вибрато · ↑↓ бенд/тремоло · зигзаг = тремоло-пикинг',
+    drop: 'Перетащите аудиофайл',
+    modelsTitle: 'AI-модель для табов',
+    modelsWarn: '<b>Чат-модели не работают со звуком.</b> DeepSeek, Claude и локальные LLM только выбирают аппликатуру табов. Они не могут вырезать или улучшить партию гитары или баса и не получают песню.',
+    modelsIntro: 'Вырезание партии и первые табы всегда выполняются на этом компьютере аудиомоделью Demucs. Выбранная AI-модель только уточняет видимую часть табов по кнопке «Улучшить с AI»; иначе ничего не отправляется.',
+    useForTab: 'Только для табов',
+    providerIncluded: 'Встроенные модели (офлайн)',
+    providerClaude: 'Claude (API-ключ Anthropic)',
+    providerOpenAI: 'Любой OpenAI-совместимый API (облако или локально)',
+    apiKey: 'API-ключ',
+    claudeKeyPlaceholder: 'API-ключ Anthropic',
+    model: 'Модель',
+    removeKey: 'Удалить сохранённый ключ',
+    endpoint: 'Endpoint (базовый URL или полный URL чата)',
+    modelApiId: 'Модель (API ID)',
+    modelPlaceholder: 'например, deepseek-flash',
+    localKeyPlaceholder: 'пусто для Ollama на этом ПК',
+    modelsHint: 'Подписка на чат Claude не включает доступ к API; для Claude нужен API-ключ Anthropic. Последний вариант работает с любым OpenAI-совместимым API, локальным или облачным: Ollama, LM Studio, DeepSeek, OpenAI, OpenRouter, Groq, Mistral. Вставьте базовый URL, например <b>https://api.deepseek.com</b>, <b>https://api.openai.com</b> или <b>https://openrouter.ai/api/v1</b>, либо полный URL <b>/chat/completions</b>. Используйте ID модели от провайдера, а не её отображаемое имя; облачным API нужен ключ этого провайдера.',
+    testConnection: 'Проверить подключение',
+    save: 'Сохранить',
+    close: 'Закрыть',
+    separationTitle: 'Модель разделения',
+    separationHint: '<b>Вырезать партию может только аудиомодель разделения.</b> Облачные чат-модели вроде DeepSeek или Claude этого не умеют. Список показывает модели Demucs, установленные на этом компьютере. htdemucs_6s — встроенная модель по умолчанию и единственная с отдельной партией гитары.',
+    recutInstrument: 'Инструмент',
+    quality: 'Качество',
+    qualityFast: 'Быстро',
+    qualityBalanced: 'Баланс',
+    qualityBest: 'Лучше (медленно)',
+    otherModel: 'Другое имя модели Demucs',
+    otherModelPlaceholder: 'например, htdemucs_ft',
+    cutAgain: 'Вырезать снова',
+    loadingInstrument: 'Загрузка: {inst}…',
+    couldNotLoad: 'Не удалось загрузить: {inst}. {error}',
+    songTabBelow: '«{name}» — табы ниже: {inst}. Протяните, чтобы зациклить фрагмент.',
+    songWritingTab: '«{name}» — записываю табы: {inst}…',
+    fullMixUnavailable: 'Полный микс недоступен: {error}',
+    loadingFullMix: 'Загрузка полного микса…',
+    loadingNoGuitar: 'Загрузка трека без гитары…',
+    loadingNoBass: 'Загрузка трека без баса…',
+    pressPlaySource: 'Нажмите «Играть», чтобы услышать этот источник.',
+    playingSource: 'Играет: {label}.',
+    playingNoGuitarQuiet: 'Играет трек без гитары. Этот фрагмент тихий: других инструментов здесь нет.',
+    playingNoBassQuiet: 'Играет трек без баса. Этот фрагмент тихий: других инструментов здесь нет.',
+    couldNotSwitch: 'Не удалось переключить источник: {error}',
+    cuttingFirstTime: 'Вырезаю из песни: {inst}. В первый раз это может занять минуту…',
+    couldNotStartCut: 'Не удалось начать вырезание: {inst}.',
+    couldNotCut: 'Не удалось вырезать: {inst}. {error}',
+    instReady: '«{name}» — {inst}: готово.',
+    writingTabStage: 'Записываю табы: {inst}',
+    cuttingStage: 'Вырезаю: {inst}',
+    progress: '{title}… {seconds} с',
+    couldNotRequestTab: 'Не удалось запросить табы: {inst}.',
+    tabReady: '«{name}» — табы готовы: {inst}. Протяните, чтобы зациклить фрагмент.',
+    autoTabFailed: 'Авто-табы не удались: {inst}. {error}',
+    unknownError: 'неизвестная ошибка',
+    writingTab: 'Записываю табы: {inst}… {seconds} с',
+    improveTitle: 'Отправляет видимую часть табов или цикл выбранной AI-модели для подбора аппликатуры',
+    chooseAiTitle: 'Сначала выберите Claude или локальную LLM в разделе «Модели»',
+    providerClaudeLabel: 'Claude',
+    providerApiLabel: 'ваша API-модель',
+    providerIncludedLabel: 'встроенные модели',
+    checkingModels: 'Проверяю модели на этом компьютере…',
+    couldNotReadSettings: 'Не удалось прочитать настройки моделей: {error}',
+    keySaved: 'ключ сохранён; введите новый, чтобы заменить',
+    endpointAnswered: 'Endpoint ответил: моделей — {count}.',
+    endpointNoAnswer: 'Endpoint не ответил. Проверьте URL и ключ; встроенные модели работают.',
+    modelsList: 'Модели: {models}',
+    testingConnection: 'Проверяю подключение…',
+    connectionFailed: 'Ошибка подключения: {error}',
+    saved: 'Сохранено. Встроенные модели работают офлайн.',
+    couldNotSave: 'Не удалось сохранить: {error}',
+    loadSongFirst: 'Сначала загрузите песню.',
+    invalidModelName: 'Используйте простое имя модели Demucs (буквы, цифры, точка, дефис).',
+    recutConfirm: 'Вырезать снова: {inst}, модель {model} ({quality})? Текущая партия и табы заменятся после завершения.',
+    recutProgress: 'Вырезаю: {inst}, модель {model}… {seconds} с',
+    recutFailed: 'Повторное вырезание не удалось: {error}',
+    recutDone: '«{name}» — повторно вырезано: {inst}, модель {model} ({quality}).',
+    askingAI: 'Прошу {provider} подобрать аппликатуру для видимых табов…',
+    aiTabChanged: 'AI-табы: изменена аппликатура {count} нот. «Вернуть встроенные табы» отменит.',
+    aiTabNoChanges: 'AI-табы: в этой части изменения не нужны.',
+    aiTabFailed: 'AI-табы не удались: {error}',
+    restoredIncluded: 'Встроенные табы восстановлены.',
+    couldNotRestore: 'Не удалось восстановить встроенные табы: {error}',
+    tempoDetected: 'Определено по песне; измените вручную при необходимости',
+    metroDetected: 'Метроном на определённых {bpm} BPM',
+    tempoNotDetected: 'Темп не определён; введите BPM песни',
+    bpmHint: 'Метроном следует темпу песни',
+    uploadCutting: 'Вырезаю из «{name}»: {inst}. Первый раз может занять несколько минут…',
+    uploadFailed: 'Загрузка не удалась: {error}',
+    couldNotPrepare: 'Не удалось подготовить: {inst}. {error}',
+    preparingSong: 'Подготовка песни',
+    confirmClear: 'Удалить все сохранённые песни и созданные партии, табы и минусовки? Это нельзя отменить.',
+    couldNotClear: 'Не удалось очистить песни: {error}',
+    serverNotResponding: 'Сервер не отвечает. Запустите: python server.py',
+    handLoadSong: 'загрузите песню',
+    handPreparing: 'подготовка…',
+    handFret: '{inst} · лад {frets}',
+    handOpen: '{inst} · открытые струны',
+    handRest: '{inst} · покой',
+    hand3dMissing: '3D-библиотека не найдена',
+    webglUnavailable: 'WebGL недоступен',
+    browserCannotPlayAudio: 'браузер не может воспроизвести этот аудиофайл',
+    browserCannotPlaySource: 'браузер не может воспроизвести этот источник',
+    song: 'песня',
+    guitarOnlyLabel: 'ТОЛЬКО ГИТАРА',
+    bassOnlyLabel: 'ТОЛЬКО БАС',
+    guitarPart: 'ПАРТИЯ ГИТАРЫ',
+    bassPart: 'ПАРТИЯ БАСА',
+    noGuitarFull: 'БЕЗ ГИТАРЫ · ВЕСЬ ТРЕК',
+    noBassFull: 'БЕЗ БАСА · ВЕСЬ ТРЕК',
+    fullMixLabel: 'ПОЛНЫЙ МИКС',
+    mixLoading: 'Загрузка микса…',
+    mixOnDemand: 'Микс загрузится при выборе',
+    noMix: 'Микс не загружен',
+    loadSongForTab: 'Загрузите песню, чтобы увидеть табы',
+    preparingTab: 'Подготовка: {inst}…',
+    autoTabUnavailable: 'Авто-табы недоступны для этой песни',
+    noNotes: 'В этой части ноты не найдены',
+    downloadNoGuitar: '{name} - без гитары.mp3',
+    downloadNoBass: '{name} - без баса.mp3',
+    lowerFullMix: 'полный микс',
+    lowerNoGuitar: 'трек без гитары',
+    lowerNoBass: 'трек без баса',
+    lowerStem: 'только {inst}',
+    includedModel: '{model} (встроенная)',
+  },
+};
+
+let lang = 'en';
+try {
+  lang = localStorage.getItem('appLang')
+    || (navigator.language.toLowerCase().startsWith('ru') ? 'ru' : 'en');
+} catch {
+  lang = 'en';
+}
+
+function t(key, vars) {
+  const table = I18N[lang] || I18N.en;
+  let text = table[key] ?? I18N.en[key] ?? key;
+  if (vars) {
+    text = text.replace(/\{(\w+)\}/g, (match, name) => (name in vars ? String(vars[name]) : match));
+  }
+  return text;
+}
+
+function instName(inst) {
+  if (lang === 'ru') return inst === 'bass' ? 'бас' : 'гитара';
+  return inst;
+}
+
 let peaks = null;
 let maxPeak = 1;
 let duration = 0;
 let loop = null;
 let drag = null;
 let trackId = null;
+let trackModels = {};
 let objectUrl = null;
 let tabNotes = [];
 let tabAvailable = false;
+let aiProvider = 'included';
+let aiTabApplied = false;
 let instrument = 'guitar';
 let bassStrings = 4;
+let metroOn = false;
+let bpm = 120;
+let beatOffset = 0;
+let beatTimes = [];
+let demucsOffset = 0;
+let beatShift = 0;
+let beatIndex = 0;
+let lastSongTime = 0;
+let tempoManual = false;
+let lastBeat = -1;
+let lastDraw = 0;
+let clickCtx = null;
+let lastStatus = null;
 
 // The tab data is written for a 4-string bass; 5/6-string basses add a low B below it.
 function tabString(string) {
@@ -311,10 +816,45 @@ const fmt = (t) => {
   return `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}.${Math.floor((t % 1) * 10)}`;
 };
 
-function setStatus(text) { $('status').textContent = text; }
+function setStatus(key, vars) {
+  lastStatus = { key, vars };
+  $('status').textContent = t(key, vars);
+}
+
+function applyLanguage() {
+  document.documentElement.lang = lang;
+  document.title = t('appTitle');
+  for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+  for (const el of document.querySelectorAll('[data-i18n-html]')) el.innerHTML = t(el.dataset.i18nHtml);
+  for (const el of document.querySelectorAll('[data-i18n-placeholder]')) el.placeholder = t(el.dataset.i18nPlaceholder);
+  for (const el of document.querySelectorAll('[data-i18n-aria]')) el.setAttribute('aria-label', t(el.dataset.i18nAria));
+  const firstTrack = $('tracks').querySelector('option[value=""]');
+  if (firstTrack) firstTrack.textContent = t('savedSongs');
+  $('play').textContent = audio.paused ? t('play') : t('pause');
+  $('lang').value = lang;
+  $('bpm').title = beatTimes.length ? t('tempoDetected') : t('bpmHint');
+  $('metro').title = beatTimes.length ? t('metroDetected', { bpm }) : t('bpmHint');
+  $('handtoggle').textContent = handVisible ? t('hideHand') : t('showHand');
+  updateSourceButtons();
+  updateLoopInfo();
+  updateAitab();
+  if (lastStatus) $('status').textContent = t(lastStatus.key, lastStatus.vars);
+  draw();
+}
+
+function setLanguage(next) {
+  lang = next === 'ru' ? 'ru' : 'en';
+  try {
+    localStorage.setItem('appLang', lang);
+  } catch {
+    // private mode: keep the choice for this session
+  }
+  document.cookie = `lang=${lang}; path=/; max-age=31536000`;
+  applyLanguage();
+}
 
 function trackName(id) {
-  return $('tracks').querySelector(`option[value="${id}"]`)?.textContent || 'song';
+  return $('tracks').querySelector(`option[value="${id}"]`)?.textContent || t('song');
 }
 
 function xToTime(x) {
@@ -370,18 +910,18 @@ function drawTab() {
     g.fillText(labels[row], x0 - 9, y);
   }
 
-  $('tabrange').textContent = duration ? `${fmt(win.a)} – ${fmt(win.b)}${loop ? ' · loop' : ''}` : '';
+  $('tabrange').textContent = duration ? `${fmt(win.a)} – ${fmt(win.b)}${loop ? t('loopSuffix') : ''}` : '';
 
   if (!duration) {
     g.fillStyle = '#596071';
     g.textAlign = 'center';
-    g.fillText(trackId ? `Preparing the ${instrument}…` : 'Load a song to see its tab', (x0 + x1) / 2, h / 2);
+    g.fillText(trackId ? t('preparingTab', { inst: instName(instrument) }) : t('loadSongForTab'), (x0 + x1) / 2, h / 2);
     return;
   }
   if (!tabAvailable) {
     g.fillStyle = '#596071';
     g.textAlign = 'center';
-    g.fillText('Auto tab unavailable for this song', (x0 + x1) / 2, h / 2);
+    g.fillText(t('autoTabUnavailable'), (x0 + x1) / 2, h / 2);
     return;
   }
 
@@ -389,7 +929,7 @@ function drawTab() {
   g.textAlign = 'center';
   if (!notes.length) {
     g.fillStyle = '#596071';
-    g.fillText('No notes detected in this part', (x0 + x1) / 2, h / 2);
+    g.fillText(t('noNotes'), (x0 + x1) / 2, h / 2);
   }
   const rowRight = new Array(rows).fill(-1000);
   const noteX = new Map();
@@ -484,7 +1024,7 @@ function drawMix() {
     g.fillStyle = '#596071';
     g.font = '11px system-ui, sans-serif';
     g.textAlign = 'center';
-    g.fillText(mixTrackId ? 'Full mix loading…' : 'No mix loaded', w / 2, mid + 4);
+    g.fillText(mixTrackId ? t('mixLoading') : trackId ? t('mixOnDemand') : t('noMix'), w / 2, mid + 4);
     return;
   }
 
@@ -513,7 +1053,7 @@ function drawMix() {
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
   g.fillStyle = source === 'mix' ? '#f5a524' : '#596071';
-  g.fillText('FULL MIX', 12, 19);
+  g.fillText(t('fullMixLabel'), 12, 19);
 }
 
 function draw() {
@@ -548,16 +1088,17 @@ function draw() {
     ctx.fillStyle = '#3a4050';
     ctx.fillRect(0, mid, w, 1);
     $('play').disabled = true;
+    $('metro').disabled = true;
     return;
   }
 
   const shownPeaks = source === 'backing' && backingPeaks ? backingPeaks : peaks;
   const shownMax = source === 'backing' && backingPeaks ? backingMaxPeak : maxPeak;
   const label = source === 'backing'
-    ? `NO ${instrument.toUpperCase()} · FULL TRACK`
+    ? t(instrument === 'bass' ? 'noBassFull' : 'noGuitarFull')
     : source === 'mix'
-      ? `${instrument.toUpperCase()} PART`
-      : `${instrument.toUpperCase()} ONLY`;
+      ? t(instrument === 'bass' ? 'bassPart' : 'guitarPart')
+      : t(instrument === 'bass' ? 'bassOnlyLabel' : 'guitarOnlyLabel');
 
   const sel = drag && drag.moved
     ? { a: xToTime(Math.min(drag.start, drag.end)), b: xToTime(Math.max(drag.start, drag.end)) }
@@ -607,6 +1148,7 @@ function draw() {
 
   $('time').textContent = `${fmt(audio.currentTime)} / ${fmt(duration)}`;
   $('play').disabled = !duration;
+  $('metro').disabled = !duration;
 }
 
 function computePeaks(buffer, buckets) {
@@ -626,8 +1168,8 @@ function computePeaks(buffer, buckets) {
 function updateLoopInfo() {
   $('clearloop').disabled = !loop;
   $('loopinfo').textContent = loop
-    ? `Loop ${fmt(loop.a)} – ${fmt(loop.b)} (${(loop.b - loop.a).toFixed(1)} s)`
-    : 'Drag to loop a part';
+    ? t('loopInfo', { a: fmt(loop.a), b: fmt(loop.b), sec: (loop.b - loop.a).toFixed(1) })
+    : t('dragLoop');
 }
 
 function applySpeed() {
@@ -641,8 +1183,10 @@ function applySpeed() {
 async function refreshTracks() {
   const { tracks } = await (await fetch('/api/tracks')).json();
   const select = $('tracks');
-  select.innerHTML = '<option value="">— saved songs —</option>';
+  select.innerHTML = `<option value="">${t('savedSongs')}</option>`;
+  trackModels = {};
   for (const track of tracks) {
+    trackModels[track.id] = track.models || {};
     if (!track.ready) continue;
     const option = document.createElement('option');
     option.value = track.id;
@@ -654,13 +1198,22 @@ async function refreshTracks() {
 }
 
 let loadToken = 0;
+let sourceToken = 0;
 
 async function loadTrack(id) {
   trackId = id;
   $('tracks').value = id;
   loop = null;
+  tempoManual = false;
+  beatOffset = 0;
+  beatTimes = [];
+  demucsOffset = 0;
+  beatShift = 0;
+  beatIndex = 0;
+  lastSongTime = 0;
   updateLoopInfo();
   await loadStem(id, instrument, 0, false);
+  detectTempo(id);
 }
 
 async function loadStem(id, inst, at, wasPlaying) {
@@ -668,6 +1221,7 @@ async function loadStem(id, inst, at, wasPlaying) {
   instrument = inst;
   $('instrument').value = inst;
   source = 'stem';
+  beatShift = demucsOffset;
   if (mixTrackId !== id) {
     if (mixUrl) URL.revokeObjectURL(mixUrl);
     mixUrl = null;
@@ -691,8 +1245,11 @@ async function loadStem(id, inst, at, wasPlaying) {
   duration = 0;
   tabNotes = [];
   tabAvailable = false;
+  aiTabApplied = false;
+  lastBeat = -1;
+  updateAitab();
   $('play').disabled = true;
-  setStatus(`Loading the ${inst}…`);
+  setStatus('loadingInstrument', { inst: instName(inst) });
   draw();
   try {
     const res = await fetch(`/media/${id}/${STEMS[inst]}`);
@@ -710,7 +1267,7 @@ async function loadStem(id, inst, at, wasPlaying) {
     objectUrl = blobUrl;
     await new Promise((resolve, reject) => {
       audio.onloadedmetadata = resolve;
-      audio.onerror = () => reject(new Error('the browser cannot play this audio file'));
+      audio.onerror = () => reject(new Error(t('browserCannotPlayAudio')));
       audio.src = blobUrl;
       audio.load();
     });
@@ -729,32 +1286,32 @@ async function loadStem(id, inst, at, wasPlaying) {
     }
     if (!duration) duration = audio.duration;
     audio.currentTime = Math.min(at || 0, duration);
+    resetMetronome();
     applySpeed();
+    mixAvailable = true;
+    backingAvailable = true;
     $('instrument').disabled = false;
     updateSourceButtons();
-    loadMix(id);
-    loadBacking(id, inst);
     const gotTab = await fetchTab(id, inst);
     if (token !== loadToken) return;
-    setStatus(gotTab
-      ? `“${trackName(id)}” — ${inst} tab below; drag a loop to freeze a part.`
-      : `“${trackName(id)}” — writing the ${inst} tab…`);
+    setStatus(gotTab ? 'songTabBelow' : 'songWritingTab', { name: trackName(id), inst: instName(inst) });
     if (!gotTab) generateTab(id, inst);
     if (wasPlaying) audio.play();
   } catch (err) {
-    setStatus(`Could not load the ${inst}: ` + err.message);
+    setStatus('couldNotLoad', { inst: instName(inst), error: err.message });
   }
   draw();
 }
 
 function updateSourceButtons() {
-  $('srcStem').textContent = instrument === 'bass' ? 'Bass only' : 'Guitar only';
+  $('srcStem').textContent = instrument === 'bass' ? t('bassOnly') : t('guitarOnly');
   $('srcStem').classList.toggle('on', source === 'stem');
-  $('srcBacking').textContent = instrument === 'bass' ? 'No bass' : 'No guitar';
+  $('srcBacking').textContent = instrument === 'bass' ? t('noBass') : t('noGuitar');
   $('srcBacking').classList.toggle('on', source === 'backing');
   $('srcBacking').disabled = !backingAvailable;
-  $('save').textContent = instrument === 'bass' ? 'Save no bass' : 'Save no guitar';
+  $('save').textContent = instrument === 'bass' ? t('saveNoBass') : t('saveNoGuitar');
   $('save').disabled = !backingAvailable;
+  $('srcMix').textContent = t('fullMix');
   $('srcMix').classList.toggle('on', source === 'mix');
   $('srcMix').disabled = !mixAvailable;
   $('bassStrings').hidden = instrument !== 'bass';
@@ -762,7 +1319,7 @@ function updateSourceButtons() {
 }
 
 async function loadMix(id) {
-  if (mixTrackId === id) return;
+  if (mixTrackId === id && mixUrl) return true;
   mixTrackId = id;
   mixAvailable = false;
   updateSourceButtons();
@@ -781,7 +1338,7 @@ async function loadMix(id) {
     }
     if (trackId !== id) {
       URL.revokeObjectURL(blobUrl);
-      return;
+      return false;
     }
     if (mixUrl) URL.revokeObjectURL(mixUrl);
     mixUrl = blobUrl;
@@ -792,24 +1349,33 @@ async function loadMix(id) {
     mixAvailable = true;
     updateSourceButtons();
     draw();
+    return true;
   } catch (err) {
     if (trackId === id) {
       mixTrackId = null;
-      setStatus('Full mix unavailable: ' + err.message);
+      mixAvailable = false;
+      updateSourceButtons();
+      setStatus('fullMixUnavailable', { error: err.message });
     }
+    return false;
   }
 }
 
 async function loadBacking(id, inst) {
+  if (backingTrackId === id && backingInstrument === inst && backingUrl) return true;
+  backingTrackId = id;
+  backingInstrument = inst;
+  backingAvailable = false;
+  updateSourceButtons();
   try {
     let res = await fetch(`/media/${id}/${BACKINGS[inst]}`);
     if (!res.ok && res.status === 404 && trackId === id && instrument === inst) {
-      if (!(await prepareStem(id, inst))) return;
+      if (!(await prepareStem(id, inst))) return false;
       res = await fetch(`/media/${id}/${BACKINGS[inst]}`);
     }
-    if (!res.ok) return;
+    if (!res.ok) return false;
     const buffer = await res.arrayBuffer();
-    if (trackId !== id || instrument !== inst) return;
+    if (trackId !== id || instrument !== inst) return false;
     const blobUrl = URL.createObjectURL(new Blob([buffer], { type: 'audio/mpeg' }));
     if (backingUrl) URL.revokeObjectURL(backingUrl);
     backingUrl = blobUrl;
@@ -820,7 +1386,7 @@ async function loadBacking(id, inst) {
     const actx = new (window.AudioContext || window.webkitAudioContext)();
     try {
       const decoded = await actx.decodeAudioData(buffer);
-      if (trackId !== id || instrument !== inst) return;
+      if (trackId !== id || instrument !== inst) return true;
       backingPeaks = computePeaks(decoded, 2400);
       backingMaxPeak = 0;
       for (const p of backingPeaks) if (p > backingMaxPeak) backingMaxPeak = p;
@@ -831,8 +1397,13 @@ async function loadBacking(id, inst) {
     } finally {
       actx.close();
     }
+    return true;
   } catch {
-    // no play-along mix for this song; the button stays disabled
+    if (trackId === id && instrument === inst) {
+      backingAvailable = false;
+      updateSourceButtons();
+    }
+    return false;
   }
 }
 
@@ -848,40 +1419,57 @@ function backingQuiet(at) {
 
 async function setSource(next) {
   if (next === source || !duration) return;
+  const token = ++sourceToken;
+  if (next === 'mix' && !mixUrl) {
+    setStatus('loadingFullMix');
+    if (!(await loadMix(trackId))) return;
+  }
+  if (next === 'backing' && !backingUrl) {
+    setStatus(instrument === 'bass' ? 'loadingNoBass' : 'loadingNoGuitar');
+    if (!(await loadBacking(trackId, instrument))) return;
+  }
+  if (token !== sourceToken) return;
   const url = next === 'mix' ? mixUrl : next === 'backing' ? backingUrl : objectUrl;
   if (!url) return;
   const at = audio.currentTime >= duration - 0.05 ? 0 : audio.currentTime;
   const previous = source;
   audio.pause();
   source = next;
+  beatShift = next === 'mix' ? 0 : demucsOffset;
   updateSourceButtons();
   try {
     await new Promise((resolve, reject) => {
       audio.onloadedmetadata = resolve;
-      audio.onerror = () => reject(new Error('the browser cannot play this source'));
+      audio.onerror = () => reject(new Error(t('browserCannotPlaySource')));
       audio.src = url;
       audio.load();
     });
     audio.currentTime = Math.min(at, audio.duration || at);
+    resetMetronome();
     applySpeed();
     audio.play().catch(() => {
-      setStatus('Press Play to listen to this source.');
+      setStatus('pressPlaySource');
     });
-    const label = source === 'mix' ? 'full mix'
-      : source === 'backing' ? `full track without ${instrument}`
-      : `${instrument} only`;
-    setStatus(source === 'backing' && backingQuiet(at)
-      ? 'Playing the full track without guitar. This part is quiet — no other instruments here.'
-      : `Playing the ${label}.`);
+    const label = source === 'mix'
+      ? t('lowerFullMix')
+      : source === 'backing'
+        ? t(instrument === 'bass' ? 'lowerNoBass' : 'lowerNoGuitar')
+        : t('lowerStem', { inst: instName(instrument) });
+    if (source === 'backing' && backingQuiet(at)) {
+      setStatus(instrument === 'bass' ? 'playingNoBassQuiet' : 'playingNoGuitarQuiet');
+    } else {
+      setStatus('playingSource', { label });
+    }
   } catch (err) {
     source = previous;
+    beatShift = previous === 'mix' ? 0 : demucsOffset;
     updateSourceButtons();
     const back = previous === 'mix' ? mixUrl : previous === 'backing' ? backingUrl : objectUrl;
     if (back) {
       audio.src = back;
       audio.load();
     }
-    setStatus('Could not switch source: ' + err.message);
+    setStatus('couldNotSwitch', { error: err.message });
   }
   draw();
 }
@@ -901,6 +1489,7 @@ async function fetchTab(id, inst) {
     if (id !== trackId || inst !== instrument) return false;
     tabNotes = notes;
     tabAvailable = true;
+    updateAitab();
     draw();
     return true;
   } catch {
@@ -909,11 +1498,11 @@ async function fetchTab(id, inst) {
 }
 
 async function prepareStem(id, inst) {
-  setStatus(`Cutting the ${inst} from the song — the first time can take a minute…`);
+  setStatus('cuttingFirstTime', { inst: instName(inst) });
   try {
     await fetch(`/api/tracks/${id}/prepare/${inst}`, { method: 'POST' });
   } catch {
-    setStatus(`Could not start cutting the ${inst}.`);
+    setStatus('couldNotStartCut', { inst: instName(inst) });
     return false;
   }
   const started = Date.now();
@@ -926,15 +1515,15 @@ async function prepareStem(id, inst) {
       continue;
     }
     if (status.status === 'error') {
-      setStatus(`Could not cut the ${inst}: ${status.error}`);
+      setStatus('couldNotCut', { inst: instName(inst), error: status.error });
       return false;
     }
     if (status.status === 'done') {
-      setStatus(`“${trackName(id)}” — ${inst} is ready.`);
+      setStatus('instReady', { name: trackName(id), inst: instName(inst) });
       return true;
     }
-    const title = status.stage === `tab-${inst}` ? `Writing the ${inst} tab` : `Cutting the ${inst}`;
-    setStatus(`${title}… ${Math.round((Date.now() - started) / 1000)} s`);
+    const title = t(status.stage === `tab-${inst}` ? 'writingTabStage' : 'cuttingStage', { inst: instName(inst) });
+    setStatus('progress', { title, seconds: Math.round((Date.now() - started) / 1000) });
   }
   return false;
 }
@@ -943,7 +1532,7 @@ async function generateTab(id, inst) {
   try {
     await fetch(`/api/tracks/${id}/prepare/${inst}`, { method: 'POST' });
   } catch {
-    setStatus(`Could not request the ${inst} tab.`);
+    setStatus('couldNotRequestTab', { inst: instName(inst) });
     return;
   }
   const started = Date.now();
@@ -957,22 +1546,369 @@ async function generateTab(id, inst) {
     }
     if (status.status === 'done') {
       if (await fetchTab(id, inst)) {
-        setStatus(`“${trackName(id)}” — ${inst} tab ready. Drag a loop to freeze a part.`);
+        setStatus('tabReady', { name: trackName(id), inst: instName(inst) });
       }
       return;
     }
     if (status.status === 'error') {
-      setStatus(`Auto ${inst} tab failed: ` + (status.error || 'unknown error'));
+      setStatus('autoTabFailed', { inst: instName(inst), error: status.error || t('unknownError') });
       return;
     }
-    setStatus(`Writing the ${inst} tab… ${Math.round((Date.now() - started) / 1000)} s`);
+    setStatus('writingTab', { inst: instName(inst), seconds: Math.round((Date.now() - started) / 1000) });
+  }
+}
+
+function providerLabel() {
+  return aiProvider === 'claude' ? t('providerClaudeLabel')
+    : aiProvider === 'local' ? t('providerApiLabel')
+      : t('providerIncludedLabel');
+}
+
+function qualityLabel(quality) {
+  return t(quality === 'fast' ? 'qualityFast'
+    : quality === 'best' ? 'qualityBest' : 'qualityBalanced');
+}
+
+function updateAitab() {
+  const button = $('aitab');
+  if (!button) return;
+  const usable = aiProvider !== 'included' || aiTabApplied;
+  button.textContent = aiTabApplied ? t('useIncludedTab') : t('improveAI');
+  button.disabled = !tabAvailable || !usable;
+  button.title = usable ? t('improveTitle') : t('chooseAiTitle');
+}
+
+function setModelStatus(text) {
+  $('modelstatus').textContent = text;
+}
+
+function toggleProviderFields() {
+  const provider = $('aiProvider').value;
+  $('claudeFields').hidden = provider !== 'claude';
+  $('localFields').hidden = provider !== 'local';
+  $('testmodel').disabled = provider === 'included';
+}
+
+function modelPayload() {
+  return {
+    provider: $('aiProvider').value,
+    claude_key: $('claudeKey').value,
+    clear_key: $('claudeClear').checked,
+    claude_model: $('claudeModel').value,
+    local_url: $('localUrl').value,
+    local_model: $('localModel').value,
+    local_key: $('localKey').value,
+    clear_local_key: $('localClear').checked,
+  };
+}
+
+function fillLocalModels(models) {
+  if (!Array.isArray(models) || !models.length) return false;
+  $('localList').innerHTML = '';
+  for (const name of models) {
+    const option = document.createElement('option');
+    option.value = name;
+    $('localList').append(option);
+  }
+  if (!$('localModel').value.trim()) $('localModel').value = models[0];
+  return true;
+}
+
+async function refreshModelsDialog() {
+  setModelStatus(t('checkingModels'));
+  let data;
+  try {
+    data = await (await fetch('/api/models?probe=1')).json();
+  } catch (err) {
+    setModelStatus(t('couldNotReadSettings', { error: err.message }));
+    return;
+  }
+  aiProvider = data.ai.provider || 'included';
+  $('aiProvider').value = aiProvider;
+  $('claudeKey').value = '';
+  $('claudeKey').placeholder = data.ai.claude_key_set
+    ? t('keySaved')
+    : t('claudeKeyPlaceholder');
+  $('claudeClear').checked = false;
+  $('claudeClear').parentElement.hidden = !data.ai.claude_key_set;
+  $('claudeModel').value = data.ai.claude_model || '';
+  $('localUrl').value = data.ai.local_url || 'http://127.0.0.1:11434';
+  $('localModel').value = data.ai.local_model || '';
+  $('localKey').value = '';
+  $('localKey').placeholder = data.ai.local_key_set
+    ? t('keySaved')
+    : t('localKeyPlaceholder');
+  $('localClear').checked = false;
+  $('localClear').parentElement.hidden = !data.ai.local_key_set;
+  fillLocalModels(data.local_models);
+  $('sepModel').innerHTML = '';
+  for (const model of data.separation || []) {
+    const option = document.createElement('option');
+    option.value = model.name;
+    option.textContent = model.bundled ? t('includedModel', { model: model.name }) : model.name;
+    $('sepModel').append(option);
+  }
+  const used = trackModels[trackId]?.[instrument]?.name;
+  if (used) $('sepModel').value = used;
+  $('recutInstrument').value = instrument;
+  $('sepCustom').value = '';
+  toggleProviderFields();
+  updateAitab();
+  setModelStatus(data.local_models?.length
+    ? t('endpointAnswered', { count: data.local_models.length })
+    : t('endpointNoAnswer'));
+}
+
+async function testModel() {
+  setModelStatus(t('testingConnection'));
+  try {
+    const res = await fetch('/api/models/test', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(modelPayload()),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      const listed = fillLocalModels(data.models);
+      const detail = t('connectionFailed', { error: data.error || res.statusText });
+      setModelStatus(listed ? `${detail} ${t('modelsList', { models: data.models.join(', ') })}` : detail);
+      return;
+    }
+    if (fillLocalModels(data.models)) {
+      setModelStatus(`${data.message} ${t('modelsList', { models: data.models.join(', ') })}`);
+    } else {
+      setModelStatus(data.message);
+    }
+  } catch (err) {
+    setModelStatus(t('connectionFailed', { error: err.message }));
+  }
+}
+
+async function saveModels() {
+  try {
+    const res = await fetch('/api/models', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(modelPayload()),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    aiProvider = $('aiProvider').value;
+    $('claudeKey').value = '';
+    $('claudeClear').checked = false;
+    $('claudeKey').placeholder = data.claude_key_set
+      ? t('keySaved')
+      : t('claudeKeyPlaceholder');
+    $('localKey').value = '';
+    $('localClear').checked = false;
+    $('localKey').placeholder = data.local_key_set
+      ? t('keySaved')
+      : t('localKeyPlaceholder');
+    $('localClear').parentElement.hidden = !data.local_key_set;
+    updateAitab();
+    setModelStatus(t('saved'));
+  } catch (err) {
+    setModelStatus(t('couldNotSave', { error: err.message }));
+  }
+}
+
+async function recut() {
+  if (!trackId) {
+    setModelStatus(t('loadSongFirst'));
+    return;
+  }
+  const target = $('recutInstrument').value;
+  const model = $('sepCustom').value.trim() || $('sepModel').value;
+  const quality = $('sepQuality').value;
+  if (!/^[A-Za-z0-9._-]+$/.test(model)) {
+    setModelStatus(t('invalidModelName'));
+    return;
+  }
+  if (!confirm(t('recutConfirm', { inst: instName(target), model, quality: qualityLabel(quality) }))) return;
+  $('recut').disabled = true;
+  try {
+    const res = await fetch(`/api/tracks/${trackId}/prepare/${target}?model=${encodeURIComponent(model)}&quality=${quality}&force=1`, { method: 'POST' });
+    const start = await res.json();
+    if (!res.ok || start.error) throw new Error(start.error || res.statusText);
+    let waited = 0;
+    while (true) {
+      await new Promise((r) => setTimeout(r, 2000));
+      waited += 2;
+      let status;
+      try {
+        status = await (await fetch(`/api/tracks/${trackId}`)).json();
+      } catch {
+        continue;
+      }
+      if (status.status === 'error') throw new Error(status.error || 'separation failed');
+      if (status.status === 'done') break;
+      setModelStatus(t('recutProgress', { inst: instName(target), model, seconds: waited }));
+    }
+    const at = audio.currentTime;
+    const wasPlaying = !audio.paused;
+    $('modelsdialog').close();
+    await refreshTracks();
+    if (target === instrument) await loadStem(trackId, target, at, wasPlaying);
+    setStatus('recutDone', { name: trackName(trackId), inst: instName(target), model, quality: qualityLabel(quality) });
+  } catch (err) {
+    setModelStatus(t('recutFailed', { error: err.message }));
+  } finally {
+    $('recut').disabled = false;
+  }
+}
+
+async function improveTab() {
+  if (!trackId || !tabAvailable) return;
+  if (aiTabApplied) return restoreTab();
+  const win = tabWindow();
+  $('aitab').disabled = true;
+  setStatus('askingAI', { provider: providerLabel() });
+  try {
+    const res = await fetch(`/api/tracks/${trackId}/ai_tab/${instrument}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ from: win.a, to: win.b }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    await fetchTab(trackId, instrument);
+    aiTabApplied = data.changed > 0;
+    setStatus(aiTabApplied ? 'aiTabChanged' : 'aiTabNoChanges', { count: data.changed });
+  } catch (err) {
+    setStatus('aiTabFailed', { error: err.message });
+  } finally {
+    updateAitab();
+  }
+}
+
+async function restoreTab() {
+  $('aitab').disabled = true;
+  try {
+    const res = await fetch(`/api/tracks/${trackId}/ai_tab/${instrument}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ restore: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    aiTabApplied = false;
+    await fetchTab(trackId, instrument);
+    setStatus('restoredIncluded');
+  } catch (err) {
+    setStatus('couldNotRestore', { error: err.message });
+  } finally {
+    updateAitab();
+  }
+}
+
+async function detectTempo(id) {
+  try {
+    const data = await (await fetch(`/api/tracks/${id}/tempo`)).json();
+    if (id !== trackId || tempoManual) return;
+    const value = Number(data.bpm);
+    if (!Number.isFinite(value) || value < 30) return;
+    bpm = Math.round(value * 10) / 10;
+    beatOffset = Number(data.offset) || 0;
+    demucsOffset = Number(data.demucs_offset) || 0;
+    beatShift = source === 'mix' ? 0 : demucsOffset;
+    beatTimes = Array.isArray(data.beats)
+      ? data.beats.map(Number).filter(Number.isFinite).sort((a, b) => a - b)
+      : [];
+    resetMetronome();
+    $('bpm').value = bpm;
+    $('bpm').title = t('tempoDetected');
+    $('metro').title = t('metroDetected', { bpm });
+    lastBeat = -1;
+  } catch {
+    if (id === trackId) $('bpm').title = t('tempoNotDetected');
+  }
+}
+
+function clickBeat() {
+  if (!clickCtx) return;
+  const now = clickCtx.currentTime;
+  const osc = clickCtx.createOscillator();
+  const gain = clickCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = 1320;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.18, now + 0.003);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+  osc.connect(gain).connect(clickCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.06);
+}
+
+function toggleMetro() {
+  metroOn = !metroOn;
+  lastBeat = -1;
+  if (metroOn) {
+    lastSongTime = 0;
+    beatIndex = beatTimes.length ? nextBeatIndex(audio.currentTime) : 0;
+    if (!clickCtx) clickCtx = new (window.AudioContext || window.webkitAudioContext)();
+    clickCtx.resume();
+    if (audio.paused) clickBeat();
+  }
+  $('metro').classList.toggle('on', metroOn);
+  $('metro').setAttribute('aria-pressed', String(metroOn));
+}
+
+function nextBeatIndex(time) {
+  const target = time - beatShift;
+  let low = 0;
+  let high = beatTimes.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (beatTimes[mid] < target) low = mid + 1;
+    else high = mid;
+  }
+  return low;
+}
+
+function resetMetronome() {
+  lastBeat = -1;
+  lastSongTime = 0;
+  beatIndex = beatTimes.length ? nextBeatIndex(audio.currentTime) : 0;
+}
+
+function metronomeTick() {
+  if (!metroOn || !duration || audio.paused) return;
+  const now = audio.currentTime;
+  if (tempoManual || !beatTimes.length) {
+    const beat = 60 / bpm;
+    const index = Math.floor((now - beatOffset - beatShift) / beat + 1e-6);
+    if (index !== lastBeat) {
+      lastBeat = index;
+      if (index >= 0) clickBeat();
+    }
+    return;
+  }
+  if (now < lastSongTime - 0.05 || now > lastSongTime + 0.5) {
+    beatIndex = nextBeatIndex(now);
+    lastBeat = -1;
+    lastSongTime = now;
+    return;
+  }
+  lastSongTime = now;
+  while (beatIndex < beatTimes.length && now >= beatTimes[beatIndex] + beatShift) {
+    if (now - (beatTimes[beatIndex] + beatShift) < 0.15) clickBeat();
+    beatIndex++;
+  }
+  if (beatIndex >= beatTimes.length) {
+    const tail = beatTimes[beatTimes.length - 1] + beatShift;
+    const beat = 60 / bpm;
+    const index = Math.floor((now - tail) / beat + 1e-6);
+    if (index > 0 && index !== lastBeat) {
+      lastBeat = index;
+      clickBeat();
+    }
   }
 }
 
 async function upload(file) {
   const inst = $('instrument').value === 'bass' ? 'bass' : 'guitar';
   instrument = inst;
-  setStatus(`Cutting the ${inst} from “${file.name}” — the first run can take a few minutes…`);
+  setStatus('uploadCutting', { inst: instName(inst), name: file.name });
   const started = Date.now();
   let id;
   try {
@@ -985,7 +1921,7 @@ async function upload(file) {
     if (!res.ok) throw new Error(data.error || res.statusText);
     id = data.id;
   } catch (err) {
-    return setStatus('Upload failed: ' + err.message);
+    return setStatus('uploadFailed', { error: err.message });
   }
   while (true) {
     await new Promise((r) => setTimeout(r, 1500));
@@ -997,12 +1933,11 @@ async function upload(file) {
     }
     if (status.status === 'done') break;
     if (status.status === 'error') {
-      return setStatus(`Could not prepare the ${inst}: ${status.error}`);
+      return setStatus('couldNotPrepare', { inst: instName(inst), error: status.error });
     }
-    const stage = status.stage === `tab-${inst}` ? `Writing the ${inst} tab`
-      : status.stage === `stem-${inst}` ? `Cutting the ${inst} from the song`
-      : 'Preparing the song';
-    setStatus(`${stage}… ${Math.round((Date.now() - started) / 1000)} s`);
+    const stage = t(status.stage === `tab-${inst}` ? 'writingTabStage'
+      : status.stage === `stem-${inst}` ? 'cuttingStage' : 'preparingSong', { inst: instName(inst) });
+    setStatus('progress', { title: stage, seconds: Math.round((Date.now() - started) / 1000) });
   }
   instrument = inst;
   await refreshTracks();
@@ -1013,15 +1948,20 @@ function togglePlay() {
   if (!duration) return;
   if (audio.paused) {
     if (loop && (audio.currentTime < loop.a || audio.currentTime >= loop.b)) audio.currentTime = loop.a;
+    resetMetronome();
     audio.play();
   } else {
     audio.pause();
   }
 }
 
-function tick() {
+function tick(now) {
   if (loop && audio.currentTime >= loop.b) audio.currentTime = loop.a;
-  draw();
+  metronomeTick();
+  if (!now || now - lastDraw >= 33) {
+    lastDraw = now || 0;
+    draw();
+  }
   if (!audio.paused && !audio.ended) requestAnimationFrame(tick);
 }
 
@@ -1049,6 +1989,7 @@ canvas.addEventListener('pointerup', (e) => {
   } else if (!wasDrag) {
     audio.currentTime = a;
   }
+  resetMetronome();
   drag = null;
   updateLoopInfo();
   draw();
@@ -1064,12 +2005,36 @@ $('play').addEventListener('click', togglePlay);
 $('srcStem').addEventListener('click', () => setSource('stem'));
 $('srcBacking').addEventListener('click', () => setSource('backing'));
 $('srcMix').addEventListener('click', () => setSource('mix'));
-$('save').addEventListener('click', () => {
+$('aitab').addEventListener('click', improveTab);
+$('metro').addEventListener('click', toggleMetro);
+$('bpm').addEventListener('input', (e) => {
+  tempoManual = true;
+  bpm = Math.min(300, Math.max(30, Number(e.target.value) || 120));
+  lastBeat = -1;
+});
+$('bpm').addEventListener('change', (e) => { e.target.value = bpm; });
+$('modelsbtn').addEventListener('click', () => {
+  $('modelsdialog').showModal();
+  refreshModelsDialog();
+});
+$('lang').addEventListener('change', (e) => setLanguage(e.target.value));
+$('aiProvider').addEventListener('change', toggleProviderFields);
+$('testmodel').addEventListener('click', testModel);
+$('savemodels').addEventListener('click', saveModels);
+$('closemodels').addEventListener('click', () => $('modelsdialog').close());
+$('recut').addEventListener('click', recut);
+$('recutInstrument').addEventListener('change', (e) => {
+  const used = trackModels[trackId]?.[e.target.value]?.name;
+  if (used) $('sepModel').value = used;
+});
+$('save').addEventListener('click', async () => {
+  if (!trackId) return;
+  if (!backingUrl && !(await loadBacking(trackId, instrument))) return;
   if (!backingUrl) return;
   const name = trackName(trackId).replace(/\.[^.]+$/, '');
   const link = document.createElement('a');
   link.href = backingUrl;
-  link.download = `${name} - no ${instrument}.mp3`;
+  link.download = t(instrument === 'bass' ? 'downloadNoBass' : 'downloadNoGuitar', { name });
   document.body.append(link);
   link.click();
   link.remove();
@@ -1079,6 +2044,7 @@ mixCanvas.addEventListener('pointerdown', (e) => {
   const rect = mixCanvas.getBoundingClientRect();
   const x = (e.clientX - rect.left) / rect.width;
   audio.currentTime = Math.max(0, Math.min(duration, x * duration));
+  resetMetronome();
   draw();
 });
 $('clearloop').addEventListener('click', () => {
@@ -1097,33 +2063,34 @@ $('bassStrings').addEventListener('change', (e) => {
   if (handView && instrument === 'bass') buildHandNeck('bass');
   draw();
 });
+$('handtoggle').addEventListener('click', () => setHandVisible(!handVisible));
 $('tracks').addEventListener('change', (e) => { if (e.target.value) loadTrack(e.target.value); });
 $('file').addEventListener('change', (e) => {
   if (e.target.files[0]) upload(e.target.files[0]);
   e.target.value = '';
 });
 $('clean').addEventListener('click', async () => {
-  if (!confirm('Delete every saved song and all generated stems, tabs and play-along mixes? This cannot be undone.')) return;
+  if (!confirm(t('confirmClear'))) return;
   try {
     const res = await fetch('/api/tracks', { method: 'DELETE' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || res.statusText);
     location.reload();
   } catch (err) {
-    setStatus('Could not clear the saved songs: ' + err.message);
+    setStatus('couldNotClear', { error: err.message });
   }
 });
 
 audio.addEventListener('play', () => {
-  $('play').textContent = '⏸ Pause';
+  $('play').textContent = t('pause');
   requestAnimationFrame(tick);
 });
 audio.addEventListener('pause', () => {
-  $('play').textContent = '▶ Play';
+  $('play').textContent = t('play');
   draw();
 });
 audio.addEventListener('ended', () => {
-  $('play').textContent = '▶ Play';
+  $('play').textContent = t('play');
   draw();
 });
 
@@ -1164,6 +2131,12 @@ window.addEventListener('resize', draw);
 
 // ---------- 3D fretting hand ----------
 let handView = null;
+let handVisible = true;
+try {
+  handVisible = localStorage.getItem('handVisible') !== '0';
+} catch {
+  // private mode: keep the hand visible
+}
 
 function handFretX(fret) {
   const hand = handView.hand;
@@ -1353,11 +2326,11 @@ function updateHand(view, dt) {
   }
 
   const frets = [...new Set(fretted.map((note) => note.f))].sort((a, b) => a - b);
-  const label = !trackId ? 'load a song'
-    : !duration ? 'preparing…'
-      : frets.length ? `${instrument} · fret ${frets.join(' ')}`
-        : openOnly ? `${instrument} · open strings`
-          : `${instrument} · at rest`;
+  const label = !trackId ? t('handLoadSong')
+    : !duration ? t('handPreparing')
+      : frets.length ? t('handFret', { inst: instName(instrument), frets: frets.join(' ') })
+        : openOnly ? t('handOpen', { inst: instName(instrument) })
+          : t('handRest', { inst: instName(instrument) });
   if (label !== hand.label) {
     hand.label = label;
     view.info.textContent = label;
@@ -1380,28 +2353,46 @@ function resizeHand() {
   camera.updateProjectionMatrix();
 }
 
+function setHandVisible(visible) {
+  handVisible = visible;
+  $('handcanvas').hidden = !visible;
+  $('handtoggle').textContent = visible ? t('hideHand') : t('showHand');
+  $('handtoggle').setAttribute('aria-pressed', String(visible));
+  try {
+    localStorage.setItem('handVisible', visible ? '1' : '0');
+  } catch {
+    // private mode: the choice lasts for this session
+  }
+  if (visible) setTimeout(resizeHand, 0);
+}
+
 function renderHand(now) {
   if (!handView) return;
+  requestAnimationFrame(renderHand);
   const view = handView;
-  const dt = Math.min(0.05, Math.max(0.001, (now - view.last) / 1000));
+  if (!handVisible) {
+    view.last = now;
+    return;
+  }
+  if (now - view.last < 33) return;
+  const dt = Math.min(0.1, Math.max(0.001, (now - view.last) / 1000));
   view.last = now;
   if (view.hand.instrument !== instrument) buildHandNeck(instrument);
   updateHand(view, dt);
   view.renderer.render(view.scene, view.camera);
-  requestAnimationFrame(renderHand);
 }
 
 function initHand() {
   const host = $('handcanvas');
   if (!window.THREE) {
-    $('handinfo').textContent = '3D library missing';
+    $('handinfo').textContent = t('hand3dMissing');
     return;
   }
   let renderer;
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   } catch {
-    $('handinfo').textContent = 'WebGL unavailable';
+    $('handinfo').textContent = t('webglUnavailable');
     return;
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -1606,16 +2597,22 @@ function initHand() {
 }
 
 (async () => {
-  updateLoopInfo();
-  updateSourceButtons();
-  draw();
+  setLanguage(lang);
   initHand();
+  setHandVisible(handVisible);
+  try {
+    const models = await (await fetch('/api/models')).json();
+    aiProvider = models.ai.provider || 'included';
+    updateAitab();
+  } catch {
+    // the included models still work without the settings endpoint
+  }
   try {
     const tracks = await refreshTracks();
     const latest = tracks.find((t) => t.ready);
     if (latest) loadTrack(latest.id);
   } catch {
-    setStatus('Server is not responding. Start it with: python server.py');
+    setStatus('serverNotResponding');
   }
 })();
 </script>

@@ -1,6 +1,6 @@
 # Guitar and Bass AI Smart Remover
 
-A Windows app that removes the guitar or bass from a song locally, shows a playable tab with a 3D fretting hand, and lets you loop and slow down any part. Separation runs offline with Demucs and Basic Pitch; no API keys, accounts, or cloud service. Generated tracks are MP3, with a Save button for the version with the instrument removed.
+A Windows app that removes the guitar or bass from a song locally, shows a playable tab with a 3D fretting hand, and lets you loop and slow down any part. Separation runs offline with Demucs and Basic Pitch, and the included models need no account or key. You can optionally connect Claude, DeepSeek or another OpenAI-compatible LLM to refine the tab; it never receives the song. Generated tracks are MP3, with a Save button for the version with the instrument removed.
 
 ## Install on Windows
 
@@ -13,7 +13,7 @@ The full project source is also available as a ZIP from [Code > Download ZIP](ht
 
 ### Why is the download so large?
 
-The setup is about 2 GB because it is fully self-contained. It bundles the Python runtime, CUDA-enabled PyTorch, the Demucs 6-stem separation model, Basic Pitch, and every other dependency. The app does not download models or call any cloud service, so it works offline after install and needs no account or API key.
+The setup is about 2 GB because it is fully self-contained. It bundles the Python runtime, CUDA-enabled PyTorch, the Demucs 6-stem separation model, Basic Pitch, and every other dependency. The included models work offline after install and need no account or key; a cloud AI for tab help is optional.
 
 ## How to use
 
@@ -39,7 +39,7 @@ The setup is written to `dist\GuitarAndBassAISmartRemoverSetup.exe`. For develop
 
 ## Русский
 
-Windows-приложение, которое локально убирает гитару или бас из песни, показывает табулатуру и 3D-постановку руки, позволяет зацикливать и замедлять любой фрагмент. Разделение работает офлайн на Demucs и Basic Pitch, без API-ключей, аккаунтов и облачных сервисов. Готовые треки сохраняются в MP3, а кнопка Save скачивает версию без выбранного инструмента.
+Windows-приложение, которое локально убирает гитару или бас из песни, показывает табулатуру и 3D-постановку руки, позволяет зацикливать и замедлять любой фрагмент. Разделение работает офлайн на Demucs и Basic Pitch, встроенные модели не требуют аккаунта и ключей. При желании можно подключить Claude, DeepSeek или другую OpenAI-совместимую LLM для уточнения табов; песня ей не отправляется. Готовые треки сохраняются в MP3, а кнопка Save скачивает версию без выбранного инструмента.
 
 ### Установка
 
@@ -52,7 +52,7 @@ Windows-приложение, которое локально убирает г�
 
 ### Почему установщик такой большой?
 
-Установщик весит около 2 ГБ, потому что он полностью автономный. Внутри среда Python, PyTorch с поддержкой CUDA, модель разделения Demucs на 6 дорожек, Basic Pitch и все остальные зависимости. Приложение не скачивает модели и не обращается к облачным сервисам, поэтому после установки работает офлайн, без аккаунта и API-ключей.
+Установщик весит около 2 ГБ, потому что он полностью автономный. Внутри среда Python, PyTorch с поддержкой CUDA, модель разделения Demucs на 6 дорожек, Basic Pitch и все остальные зависимости. Встроенные модели после установки работают офлайн, без аккаунта и ключей; облачная AI-модель для табов подключается по желанию.
 
 ### Как пользоваться
 
